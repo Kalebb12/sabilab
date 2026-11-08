@@ -3,239 +3,246 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>SabiLab - Business Simulation</title>
+  <title>SabiLab - AI Workplace Simulation</title>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f8fafc; color: #0f172a; padding: 1rem; line-height: 1.4; }
-    .container { max-width: 520px; margin: 0 auto; background: #fff; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.06); padding: 1.25rem; }
-    h1 { font-size: 1.35rem; color: #0f172a; margin-bottom: 0.5rem; }
-    h2 { font-size: 1.1rem; color: #1e293b; margin: 1rem 0 0.5rem; }
-    p { font-size: 0.9rem; color: #475569; margin-bottom: 0.75rem; }
-    input, textarea, button, select { width: 100%; padding: 0.65rem; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; margin-bottom: 0.75rem; }
-    button { background: #0284c7; color: white; border: none; font-weight: 600; cursor: pointer; }
-    button:hover { background: #0369a1; }
-    .box { background: #f1f5f9; padding: 0.85rem; border-radius: 8px; margin-bottom: 0.75rem; font-size: 0.85rem; }
-    .chat-box { max-height: 260px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 8px; padding: 0.75rem; background: #fafafa; margin-bottom: 0.75rem; }
-    .msg { margin-bottom: 0.5rem; padding: 0.4rem 0.6rem; border-radius: 6px; font-size: 0.85rem; }
-    .msg-ai { background: #e0f2fe; color: #0369a1; }
-    .msg-student { background: #dcfce7; color: #15803d; text-align: right; }
-    .msg-twist { background: #fee2e2; color: #b91c1c; font-weight: 600; border-left: 3px solid #ef4444; }
-    .status-tag { font-size: 0.75rem; color: #64748b; font-style: italic; margin-bottom: 0.5rem; }
-    .badge { display: inline-block; padding: 2px 8px; background: #e0f2fe; color: #0284c7; border-radius: 12px; font-size: 0.75rem; font-weight: 600; }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background: #f8fafc; color: #0f172a; line-height: 1.5; padding: 1rem 0.5rem; display: flex; justify-content: center; }
+    .app-container { width: 100%; max-width: 520px; background: #ffffff; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); padding: 1.5rem; }
+    
+    /* Screen management: only one active */
+    .screen { display: none; }
+    .screen.active { display: block; }
+
+    /* Single accent color: #0284c7 */
+    .brand { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.06em; color: #0284c7; font-weight: 700; margin-bottom: 0.25rem; }
+    h1 { font-size: 1.45rem; color: #0f172a; margin-bottom: 0.5rem; font-weight: 700; }
+    h2 { font-size: 1.2rem; color: #0f172a; margin-bottom: 0.75rem; font-weight: 600; }
+    p { font-size: 0.95rem; color: #475569; margin-bottom: 1rem; }
+    
+    /* Large tap targets (min 48px height) */
+    button {
+      display: block; width: 100%; min-height: 48px; padding: 0.85rem 1rem;
+      background: #0284c7; color: #ffffff; border: none; border-radius: 10px;
+      font-size: 1rem; font-weight: 600; cursor: pointer; text-align: center;
+      margin-top: 0.75rem; touch-action: manipulation;
+    }
+    button:active { background: #0369a1; }
+    button.secondary { background: #f1f5f9; color: #0f172a; border: 1px solid #cbd5e1; }
+    button.secondary:active { background: #e2e8f0; }
+
+    input[type="text"], textarea {
+      width: 100%; min-height: 48px; padding: 0.75rem 1rem; border: 1px solid #cbd5e1;
+      border-radius: 10px; font-size: 1rem; color: #0f172a; background: #ffffff;
+      margin-bottom: 0.75rem; -webkit-appearance: none;
+    }
+    textarea { min-height: 110px; resize: vertical; line-height: 1.4; }
+
+    /* Cards & Lists */
+    .card-item {
+      border: 2px solid #e2e8f0; border-radius: 12px; padding: 1rem; margin-bottom: 0.85rem;
+      cursor: pointer; transition: border-color 0.15s; background: #ffffff;
+    }
+    .card-item.live { border-color: #0284c7; background: #f0f9ff; }
+    .card-item.disabled { opacity: 0.55; cursor: not-allowed; border-style: dashed; }
+    .tag { display: inline-block; font-size: 0.75rem; font-weight: 700; padding: 2px 8px; border-radius: 6px; text-transform: uppercase; }
+    .tag.live { background: #0284c7; color: #ffffff; }
+    .tag.soon { background: #94a3b8; color: #ffffff; }
+
+    /* Huddle Chat */
+    .timer-bar { display: flex; justify-content: space-between; align-items: center; background: #f1f5f9; padding: 0.5rem 0.85rem; border-radius: 8px; font-size: 0.88rem; font-weight: 600; margin-bottom: 0.75rem; }
+    .chat-stream { height: 300px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 10px; padding: 0.75rem; background: #fafafa; margin-bottom: 0.75rem; }
+    .bubble { max-width: 82%; padding: 0.6rem 0.85rem; border-radius: 10px; margin-bottom: 0.6rem; font-size: 0.9rem; line-height: 1.4; word-break: break-word; }
+    .bubble.theirs { background: #e2e8f0; color: #0f172a; align-self: flex-start; }
+    .bubble.mine { background: #e0f2fe; color: #0369a1; margin-left: auto; text-align: right; }
+    .bubble.twist { background: #fee2e2; color: #991b1b; border-left: 4px solid #ef4444; width: 100%; max-width: 100%; font-weight: 600; }
+    .twist-banner { background: #fee2e2; border: 1px solid #f87171; color: #991b1b; padding: 0.75rem; border-radius: 8px; margin-bottom: 0.75rem; font-size: 0.88rem; font-weight: 600; display: none; }
+    
+    /* Results & Quotes */
+    .skill-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 0.85rem; margin-bottom: 0.75rem; }
+    .skill-head { display: flex; justify-content: space-between; align-items: center; font-size: 0.92rem; margin-bottom: 0.4rem; }
+    .pill { background: #dcfce7; color: #166534; font-size: 0.78rem; font-weight: 700; padding: 2px 8px; border-radius: 10px; }
+    .quote-block { background: #ffffff; border-left: 3px solid #0284c7; padding: 0.45rem 0.65rem; font-style: italic; font-size: 0.88rem; margin: 0.4rem 0; color: #1e293b; }
+    .quote-block.insufficient { border-left-color: #cbd5e1; color: #64748b; font-style: normal; }
+    .confidence { font-size: 0.8rem; color: #64748b; }
+    .badge-box { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 10px; padding: 0.85rem; margin-bottom: 1rem; }
+    
+    /* Spinner */
+    .spinner { width: 44px; height: 44px; border: 4px solid #e2e8f0; border-top-color: #0284c7; border-radius: 50%; animation: spin 1s linear infinite; margin: 2rem auto; }
+    @keyframes spin { to { transform: rotate(360deg); } }
   </style>
 </head>
 <body>
-<div class="container" id="app">
-  <h1>SabiLab Business Simulation</h1>
-  <p>AI-evaluated workplace simulator for real Nigerian SME problems.</p>
+<div class="app-container">
 
-  <!-- Step 1: Start Session -->
-  <div id="step-lobby">
-    <div class="box">
-      <strong>Adaeze's Fabrics (Accountant)</strong>
-      <p style="margin-top:4px;">Cash vs customer discount crisis. 90-second demo huddle.</p>
+  <!-- Screen 1: Landing -->
+  <section id="screen-landing" class="screen active">
+    <div class="brand">SabiLab Simulation</div>
+    <h1>Prove your business decision skills.</h1>
+    <p>Work directly with AI teammates on realistic Nigerian SME crises. Earn an employer-ready Evidence Card verified by simulation data.</p>
+    
+    <h2>Select a Scenario</h2>
+    <div class="card-item live" onclick="selectScenario('adaeze')">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <strong>Adaeze’s Fabrics</strong>
+        <span class="tag live">Live</span>
+      </div>
+      <p style="margin: 0.25rem 0 0 0; font-size: 0.88rem;">Role: Accountant. Mrs Bello demands a 20% discount while Kano Textiles threatens supply cutoff.</p>
     </div>
-    <label><input type="checkbox" id="consent-check" style="width:auto;"> I consent to performance evaluation for research/assessment.</label>
-    <input type="text" id="student-name" placeholder="Your first name" value="Student">
-    <button id="btn-start" onclick="startSession()">Start Simulation</button>
-  </div>
 
-  <!-- Step 2: Huddle Chat -->
-  <div id="step-huddle" style="display:none;">
-    <h2>Huddle Chat</h2>
-    <div class="box" id="brief-box"></div>
-    <div class="chat-box" id="chat-messages"></div>
-    <div id="twist-banner" style="display:none;" class="msg msg-twist"></div>
-    <input type="text" id="chat-input" placeholder="Type message (max 500 chars)..." maxlength="500">
-    <button onclick="sendChatMessage()">Send</button>
-    <button onclick="goToTask()" style="background:#475569;">Proceed to Task Recommendation</button>
-  </div>
+    <div class="card-item disabled">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <strong>Funke’s Kitchen</strong>
+        <span class="tag soon">Coming soon</span>
+      </div>
+      <p style="margin: 0.25rem 0 0 0; font-size: 0.88rem;">Role: Operations. Lunch order shortfall under cooking gas shortages.</p>
+    </div>
 
-  <!-- Step 3: Task Submission with Local Autosave & Resume -->
-  <div id="step-task" style="display:none;">
-    <h2>Individual Recommendation</h2>
-    <p>Write your recommendation to Adaeze in 2 to 4 sentences: what you do about the discount and Kano invoice, with numbers, and why.</p>
-    <div class="status-tag" id="autosave-status">Draft autosaves locally every 3s</div>
-    <textarea id="task-textarea" rows="4" placeholder="Enter recommendation..."></textarea>
-    <button onclick="submitStudentTask()">Submit Recommendation</button>
-  </div>
+    <div class="card-item disabled">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <strong>Kunle’s Creative Studio</strong>
+        <span class="tag soon">Coming soon</span>
+      </div>
+      <p style="margin: 0.25rem 0 0 0; font-size: 0.88rem;">Role: Project Manager. Campaign launch deadline moved up with a fixed budget.</p>
+    </div>
+  </section>
 
-  <!-- Step 4: Results & Evidence Card -->
-  <div id="step-results" style="display:none;">
-    <h2>Simulation Results</h2>
-    <div id="results-content"></div>
-    <div id="card-link-box"></div>
-  </div>
+  <!-- Screen 2: Consent -->
+  <section id="screen-consent" class="screen">
+    <div class="brand">Participant Notice</div>
+    <h2>Assessment & Research Consent</h2>
+    <p>SabiLab evaluates your workplace communication and problem-solving through simulated chat and recommendations. Your performance data is anonymized and scored against professional rubrics.</p>
+    
+    <label style="display:flex; align-items:flex-start; gap:0.5rem; margin-bottom:1rem; cursor:pointer;">
+      <input type="checkbox" id="consent-check" style="margin-top:0.25rem; width:20px; height:20px;">
+      <span style="font-size:0.9rem;">I agree to participate and allow my simulation responses to be evaluated by SabiLab's assessment pipeline.</span>
+    </label>
+
+    <input type="text" id="student-name-input" placeholder="Your first name" value="Student">
+    <button onclick="onStartSession()">Start Simulation →</button>
+    <button class="secondary" onclick="showScreen('screen-landing')">Back</button>
+  </section>
+
+  <!-- Screen 3: Role Screen -->
+  <section id="screen-role" class="screen">
+    <div class="brand">Assigned Role</div>
+    <h2 id="role-title">Accountant</h2>
+    
+    <div style="background:#f1f5f9; padding:0.85rem; border-radius:10px; margin-bottom:1rem;">
+      <strong style="font-size:0.85rem; color:#0284c7; text-transform:uppercase;">Private Brief</strong>
+      <p id="role-brief" style="margin:0.25rem 0 0 0; font-size:0.92rem; white-space:pre-line;"></p>
+    </div>
+
+    <h2 style="font-size:1rem; margin-bottom:0.5rem;">Teammates in Huddle</h2>
+    <div id="teammate-roster" style="margin-bottom:1.5rem;"></div>
+
+    <button onclick="startHuddle()">Enter Huddle Room →</button>
+  </section>
+
+  <!-- Screen 4: Huddle -->
+  <section id="screen-huddle" class="screen">
+    <div class="timer-bar">
+      <span>Adaeze's Fabrics Huddle</span>
+      <span>Remaining: <span id="huddle-timer" style="color:#0284c7;">01:30</span></span>
+    </div>
+    
+    <div id="twist-alert" class="twist-banner"></div>
+    <div id="chat-stream" class="chat-stream"></div>
+
+    <div style="display:flex; gap:0.5rem; margin-bottom:0.75rem;">
+      <input type="text" id="chat-input" placeholder="Type a message (max 500 chars)..." maxlength="500" style="margin-bottom:0;">
+      <button onclick="onSendMessage()" style="width:auto; min-width:80px; margin-top:0;">Send</button>
+    </div>
+
+    <button class="secondary" onclick="proceedToTask()">Proceed to Task Recommendation →</button>
+  </section>
+
+  <!-- Screen 5: Task -->
+  <section id="screen-task" class="screen">
+    <div class="brand">Individual Deliverable</div>
+    <h2>Recommendation to Adaeze</h2>
+    <div style="background:#f8fafc; border:1px solid #e2e8f0; padding:0.85rem; border-radius:10px; margin-bottom:1rem;">
+      <strong>Situation Recap:</strong>
+      <p style="margin:0.25rem 0 0 0; font-size:0.88rem;">Mrs Bello asks for 20% discount for delivery by 2:00 PM. Kano Textiles has cancelled fabric supply over our overdue ₦350,000 invoice (cash on hand: ₦480,000).</p>
+    </div>
+
+    <p style="font-size:0.88rem;">Write your recommendation in 2 to 4 sentences: what you do about the discount and the Kano invoice, with numbers, and why.</p>
+    <div id="draft-indicator" style="font-size:0.78rem; color:#64748b; margin-bottom:0.4rem;">Draft autosaves locally every 3s</div>
+    <textarea id="task-input" placeholder="Your recommendation..."></textarea>
+    
+    <button onclick="onSubmitTask()">Submit Recommendation →</button>
+  </section>
+
+  <!-- Screen 6: Scoring -->
+  <section id="screen-scoring" class="screen">
+    <div id="scoring-loading">
+      <div class="brand">Assessment Pipeline</div>
+      <h2>Evaluating Performance...</h2>
+      <p>The reading and scoring passes are verifying your messages and task against factual checks and professional rubrics.</p>
+      <div class="spinner"></div>
+    </div>
+
+    <div id="clarification-panel" style="display:none;">
+      <div class="brand" style="color:#b45309;">Clarification Gate</div>
+      <h2>Please Clarify Your Intent</h2>
+      <p>Before scoring can finalize, please answer these brief questions regarding your messages:</p>
+      <div id="clarification-list"></div>
+      <button onclick="onSubmitClarification()">Submit Clarification & Finish Scoring →</button>
+    </div>
+  </section>
+
+  <!-- Screen 7: Results -->
+  <section id="screen-results" class="screen">
+    <div class="brand">Verified Results</div>
+    <h2>Simulation Competency Report</h2>
+
+    <div id="badge-display" class="badge-box"></div>
+
+    <h3 style="font-size:0.95rem; margin-bottom:0.5rem; text-transform:uppercase; color:#334155;">Evaluated Skills</h3>
+    <div id="results-skills"></div>
+
+    <div style="background:#f1f5f9; padding:0.85rem; border-radius:10px; margin:1rem 0;">
+      <p style="margin-bottom:0.5rem;"><strong>What Went Well:</strong> <span id="did-well-text"></span></p>
+      <p style="margin-bottom:0;"><strong>What to Improve:</strong> <span id="improve-text"></span></p>
+    </div>
+
+    <button onclick="goToCardScreen()">Create my Evidence Card →</button>
+    <button class="secondary" onclick="onTryAgain()">Try Again (Attempt 2)</button>
+  </section>
+
+  <!-- Screen 8: Evidence Card Publish -->
+  <section id="screen-card" class="screen">
+    <div class="brand">Public Shareable Link</div>
+    <h2>Publish Your Evidence Card</h2>
+    <p>Select which verified components to include on your public card:</p>
+
+    <div style="margin-bottom:1rem; font-size:0.9rem;">
+      <label style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.4rem; cursor:pointer;">
+        <input type="checkbox" class="card-field-check" value="badges" checked> Simulation Badge & Tier
+      </label>
+      <label style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.4rem; cursor:pointer;">
+        <input type="checkbox" class="card-field-check" value="levels" checked> Skill Competency Levels
+      </label>
+      <label style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.4rem; cursor:pointer;">
+        <input type="checkbox" class="card-field-check" value="quotes" checked> Verified Student Quotes
+      </label>
+      <label style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.4rem; cursor:pointer;">
+        <input type="checkbox" class="card-field-check" value="recommendations" checked> Targeted Growth Drill
+      </label>
+    </div>
+
+    <button onclick="onPublishCard()">Publish Evidence Card Link</button>
+
+    <div id="card-published-box" style="display:none; margin-top:1.25rem; background:#eff6ff; border:1px solid #bfdbfe; padding:1rem; border-radius:10px;">
+      <strong>Your Evidence Card is live:</strong>
+      <p style="word-break:break-all; margin:0.5rem 0;"><a id="card-link" href="#" target="_blank" style="color:#0284c7; font-weight:700;"></a></p>
+      <button class="secondary" onclick="window.open(document.getElementById('card-link').href, '_blank')">Open Card Page ↗</button>
+    </div>
+  </section>
+
 </div>
 
-<script>
-let currentSessionId = localStorage.getItem("sabilab_current_session") || null;
-let currentUserId = localStorage.getItem("sabilab_user_id") || null;
-let autosaveTimer = null;
-
-function updateStatus(msg) {
-  const el = document.getElementById("autosave-status");
-  if (el) el.innerText = msg;
-}
-
-// Autosave draft locally every 3 seconds
-function initAutosave() {
-  if (autosaveTimer) clearInterval(autosaveTimer);
-  const draftKey = `sabilab_draft_${currentSessionId}`;
-  
-  // Resume after refresh
-  const saved = localStorage.getItem(draftKey);
-  const tarea = document.getElementById("task-textarea");
-  if (saved && tarea && !tarea.value) {
-    tarea.value = saved;
-    updateStatus("Resumed saved draft from local storage.");
-  }
-
-  autosaveTimer = setInterval(async () => {
-    const text = document.getElementById("task-textarea")?.value || "";
-    if (currentSessionId && text) {
-      localStorage.setItem(draftKey, text);
-      updateStatus("Draft autosaved locally at " + new Date().toLocaleTimeString());
-      try {
-        await fetch(`/session/${currentSessionId}/draft`, {
-          method: "POST",
-          headers: {"Content-Type": "application/json"},
-          body: JSON.stringify({text: text})
-        });
-      } catch (e) {}
-    }
-  }, 3000);
-}
-
-async function startSession() {
-  const consent = document.getElementById("consent-check").checked;
-  const name = document.getElementById("student-name").value || "Student";
-  if (!consent) { alert("Please accept the consent terms."); return; }
-
-  const res = await fetch("/session", {
-    method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({first_name: name, consent: true, mode: "demo", user_id: currentUserId})
-  });
-  const data = await res.json();
-  if (data.session_id) {
-    currentSessionId = data.session_id;
-    currentUserId = data.user_id;
-    localStorage.setItem("sabilab_current_session", currentSessionId);
-    localStorage.setItem("sabilab_user_id", currentUserId);
-
-    document.getElementById("step-lobby").style.display = "none";
-    document.getElementById("step-huddle").style.display = "block";
-    document.getElementById("brief-box").innerText = data.private_brief;
-    loadMessages();
-  }
-}
-
-async function loadMessages() {
-  if (!currentSessionId) return;
-  const res = await fetch(`/session/${currentSessionId}/messages`);
-  const msgs = await res.json();
-  const box = document.getElementById("chat-messages");
-  box.innerHTML = msgs.map(m => {
-    let cls = m.sender === "Student" ? "msg-student" : (m.sender === "Adaeze" && m.phase === "twist" ? "msg-twist" : "msg-ai");
-    return `<div class="msg ${cls}"><strong>${m.sender}:</strong> ${m.text}</div>`;
-  }).join("");
-  box.scrollTop = box.scrollHeight;
-}
-
-async function sendChatMessage() {
-  const input = document.getElementById("chat-input");
-  const text = input.value.trim();
-  if (!text) return;
-  if (text.length > 500) { alert("Message exceeds 500 character limit."); return; }
-
-  const res = await fetch(`/session/${currentSessionId}/message`, {
-    method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({sender: "Student", text: text})
-  });
-  if (res.status === 429) {
-    alert("Please wait a moment before sending another message (rate limit).");
-    return;
-  }
-  input.value = "";
-  loadMessages();
-}
-
-function goToTask() {
-  document.getElementById("step-huddle").style.display = "none";
-  document.getElementById("step-task").style.display = "block";
-  initAutosave();
-}
-
-async function submitStudentTask() {
-  const text = document.getElementById("task-textarea").value.trim();
-  if (!text) { alert("Please enter your recommendation."); return; }
-  updateStatus("Submitting...");
-
-  await fetch("/task", {
-    method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({session_id: currentSessionId, text: text, user_id: currentUserId})
-  });
-
-  // Clear autosaved draft on submission
-  localStorage.removeItem(`sabilab_draft_${currentSessionId}`);
-  if (autosaveTimer) clearInterval(autosaveTimer);
-
-  // Trigger score pipeline
-  updateStatus("Scoring with AI evaluation pipeline...");
-  const scoreRes = await fetch(`/session/${currentSessionId}/score`, {method: "POST"});
-  const scoreData = await scoreRes.json();
-
-  if (scoreData.status === "awaiting_clarification") {
-    const q = scoreData.clarifications[0];
-    const ans = prompt("Clarification needed: " + q.question);
-    await fetch(`/session/${currentSessionId}/clarify`, {
-      method: "POST",
-      headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({message_id: q.message_id, answer: ans || "Clarified"})
-    });
-  }
-
-  showResults();
-}
-
-async function showResults() {
-  document.getElementById("step-task").style.display = "none";
-  document.getElementById("step-results").style.display = "block";
-
-  const res = await fetch(`/session/${currentSessionId}/results`);
-  const data = await res.json();
-  const c = document.getElementById("results-content");
-  c.innerHTML = `
-    <div class="box">
-      <strong>Badge:</strong> ${data.badge ? data.badge.name + ' (' + data.badge.level + ')' : 'No badge yet'}<br>
-      <strong>Routing:</strong> ${data.routing}
-    </div>
-    <div class="box">
-      <strong>Scores:</strong><br>
-      ${(data.scores || []).map(s => `• ${s.criterion}: <em>${s.level}</em> (Quote: "${s.evidence}")`).join("<br>")}
-    </div>`;
-
-  const cardRes = await fetch(`/session/${currentSessionId}/card`, {
-    method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({})
-  });
-  const cardData = await cardRes.json();
-  if (cardData.slug) {
-    document.getElementById("card-link-box").innerHTML = `
-      <p style="margin-top:1rem;"><a href="/card/${cardData.slug}" target="_blank" style="color:#0284c7;font-weight:bold;">View Public Evidence Card →</a></p>`;
-  }
-}
-
-// Check if resuming an existing session
-if (currentSessionId && localStorage.getItem(`sabilab_draft_${currentSessionId}`)) {
-  document.getElementById("step-lobby").style.display = "none";
-  document.getElementById("step-task").style.display = "block";
-  initAutosave();
-}
-</script>
+<script src="/static/api.js"></script>
+<script src="/static/huddle.js"></script>
+<script src="/static/app.js"></script>
 </body>
 </html>
