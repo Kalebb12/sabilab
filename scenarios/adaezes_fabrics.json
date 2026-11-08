@@ -1,0 +1,174 @@
+{
+  "id": "adaezes_fabrics",
+  "title": "Adaeze’s Fabrics",
+  "status": "full",
+  "student_role": "Accountant",
+  "roster": [
+    {
+      "id": "sales",
+      "name": "Emeka",
+      "role": "Sales",
+      "private_brief": "Mrs Bello is our biggest customer this quarter. She wants 20% off the blue Ankara and delivery by 2pm. If we refuse the discount, she might go to another supplier.",
+      "opening_line": "Mrs Bello called again. She is insisting on a 20% discount on the blue Ankara and needs delivery by 2pm sharp. How should we handle her?",
+      "reply_before_twist": "Giving Mrs Bello some discount keeps her happy, but 20% cuts our margin very thin. What do accounts say about our cash?",
+      "reply_after_twist": "Wait, Kano cancelled supply? Without Kano, we have no more stock coming in. We cannot afford to lose them!"
+    },
+    {
+      "id": "operations",
+      "name": "Ngozi",
+      "role": "Operations",
+      "private_brief": "We have the blue Ankara in stock for Mrs Bello's order. To hit the 2pm delivery deadline, dispatch must leave by 12:30pm.",
+      "opening_line": "The blue Ankara rolls are here, but dispatch needs the go-ahead by 12:30pm if Mrs Bello is getting delivery by 2pm.",
+      "reply_before_twist": "I am standing by to pack and send the order as soon as we agree on the terms.",
+      "reply_after_twist": "If Kano Textiles stops delivering, our warehouse will run completely dry next week. We need their raw materials."
+    },
+    {
+      "id": "marketing",
+      "name": "Chioma",
+      "role": "Marketing",
+      "private_brief": "A 20% price cut devalues our premium fabric brand. Propose offering a 10% loyalty discount or free delivery instead.",
+      "opening_line": "A 20% discount is too steep for our brand reputation. Can we counter-offer 10% or add a voucher for her next order?",
+      "reply_before_twist": "Let us protect our margins. Mrs Bello values reliability as much as price.",
+      "reply_after_twist": "We must protect our supplier relationship with Kano. Can we pay a portion today to restore goodwill?"
+    },
+    {
+      "id": "graphic_design",
+      "name": "Femi",
+      "role": "Graphic Design",
+      "private_brief": "Custom tags for Mrs Bello's VIP packaging are ready for printing once the order is approved.",
+      "opening_line": "The branded tags for Mrs Bello are ready. Let me know once accounts approves the order.",
+      "reply_before_twist": "I am ready to finalize the custom presentation tags.",
+      "reply_after_twist": "I can pause package printing until we know what happens with Kano Textiles."
+    }
+  ],
+  "owner": {
+    "name": "Adaeze",
+    "character": "Owner of Adaeze's Fabrics. Practical, focused on cash flow and survival.",
+    "scripted_lines": {
+      "opening": "Mrs Bello wants 20% off and delivery by 2pm. Sort it out between you.",
+      "follow_up": "I need a plan before this huddle ends.",
+      "twist": "Bad news. Kano Textiles has cancelled our supply because the ₦350,000 invoice is overdue. They will talk again if we pay something today. Give me options I can afford.",
+      "after_twist": "Options I can afford, please."
+    }
+  },
+  "client": {
+    "name": "Mrs Bello",
+    "character": "Key VIP client. Demanding, proud, values prompt delivery and loyalty recognition.",
+    "scripted_lines": {
+      "opening": "I need my delivery of blue Ankara by 2pm sharp. And given my continuous patronage, I expect a 20% discount on this order.",
+      "follow_up": "I have not heard back on my delivery confirmation. What is the status?"
+    }
+  },
+  "facts": [
+    {
+      "key": "cash_on_hand",
+      "value": "₦480,000",
+      "who_knows_it_first": "Accountant"
+    },
+    {
+      "key": "overdue_kano_invoice",
+      "value": "₦350,000",
+      "who_knows_it_first": "Accountant"
+    },
+    {
+      "key": "cash_remaining_if_paid_in_full",
+      "value": "₦130,000",
+      "who_knows_it_first": "No one says it first (derived: ₦480,000 - ₦350,000)"
+    },
+    {
+      "key": "mrs_bello_discount_request",
+      "value": "20%",
+      "who_knows_it_first": "Adaeze"
+    },
+    {
+      "key": "mrs_bello_delivery_deadline",
+      "value": "2:00 PM",
+      "who_knows_it_first": "Adaeze"
+    },
+    {
+      "key": "fabric_stock",
+      "value": "Blue Ankara in stock, dispatch needed by 12:30 PM",
+      "who_knows_it_first": "Operations"
+    },
+    {
+      "key": "kano_renegotiation_condition",
+      "value": "Will resume talks if a partial payment is made today",
+      "who_knows_it_first": "Adaeze (at twist)"
+    }
+  ],
+  "timeline": [
+    {
+      "real_time": 0,
+      "demo_time": 0,
+      "speaker": "Adaeze",
+      "text": "Mrs Bello wants 20% off and delivery by 2pm. Sort it out between you.",
+      "condition": null
+    },
+    {
+      "real_time": 450,
+      "demo_time": 45,
+      "speaker": "Adaeze",
+      "text": "Bad news. Kano Textiles has cancelled our supply because the ₦350,000 invoice is overdue. They will talk again if we pay something today. Give me options I can afford.",
+      "condition": "twist"
+    }
+  ],
+  "twist": {
+    "time_ratio": 0.5,
+    "text": "Bad news. Kano Textiles has cancelled our supply because the ₦350,000 invoice is overdue. They will talk again if we pay something today. Give me options I can afford."
+  },
+  "task": {
+    "prompt": "Write your recommendation to Adaeze in 2 to 4 sentences: what you do about the discount and the Kano invoice, with numbers, and why."
+  },
+  "checks": [
+    {
+      "id": "K1",
+      "label": "Cash on hand (₦480,000)",
+      "patterns": ["480000", "480k"]
+    },
+    {
+      "id": "K2",
+      "label": "Overdue invoice (₦350,000)",
+      "patterns": ["350000", "350k"]
+    },
+    {
+      "id": "K3",
+      "label": "Cash remaining after full invoice (₦130,000)",
+      "patterns": ["130000", "130k"]
+    },
+    {
+      "id": "K4",
+      "label": "Discount mentioned (20% or counter-offer)",
+      "patterns": ["20%", "20", "10%", "10", "5%", "5", "15%", "15"]
+    },
+    {
+      "id": "K5",
+      "label": "Partial payment figure",
+      "patterns": ["150000", "150k", "200000", "200k", "100000", "100k", "175000", "175k"]
+    }
+  ],
+  "approaches": {
+    "acceptable": [
+      "Pay Kano Textiles in full (₦350,000) leaving ₦130,000 cash buffer, and reject or counter Mrs Bello's discount to 5-10% to protect margins.",
+      "Pay Kano Textiles a partial amount (e.g., ₦150,000 to ₦200,000) to restore supply while keeping cash on hand (₦280,000 to ₦330,000), and offer Mrs Bello a smaller discount (e.g., 10%) tied to immediate payment.",
+      "Deliver Mrs Bello's order by 2pm at full price or with a small delivery discount, using revenue to support supplier settlement."
+    ],
+    "weak": [
+      "Grant Mrs Bello the full 20% discount without checking margins or cash impact.",
+      "Pay nothing to Kano Textiles and let supply collapse.",
+      "Recommend paying amounts that exceed available cash of ₦480,000."
+    ]
+  },
+  "register": {
+    "Adaeze": "Professional and concise. Lead with the recommendation.",
+    "Mrs Bello": "Formal and courteous. Acknowledge relationship, firm on numbers.",
+    "Teammates": "Professional but friendly. Say what you need and by when."
+  },
+  "variant_b": {
+    "facts": {
+      "cash_on_hand": "₦550,000",
+      "overdue_kano_invoice": "₦400,000",
+      "cash_remaining_if_paid_in_full": "₦150,000",
+      "mrs_bello_discount_request": "15%"
+    }
+  }
+}
