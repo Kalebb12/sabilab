@@ -1,10 +1,13 @@
 """Reading pass implementation to assess message clarity, language, and tone."""
 
 import json
+import logging
 from typing import Any, Dict, List
 from db import get_connection
 from app.pipeline.llm import call_gemini_json
 from app.pipeline.prompts import READING_SYSTEM_PROMPT
+
+logger = logging.getLogger("sabilab.pipeline.reading")
 
 
 def build_reading_prompt(transcript: List[Dict[str, Any]], scenario: Dict[str, Any]) -> str:
@@ -57,6 +60,9 @@ def execute_reading_pass(session_id: str, transcript: List[Dict[str, Any]], scen
                 ),
             )
         conn.commit()
+    except Exception:
+        logger.exception(f"[{session_id}] Error persisting readings")
+        raise
     finally:
         conn.close()
 

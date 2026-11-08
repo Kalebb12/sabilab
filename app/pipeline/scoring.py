@@ -1,12 +1,17 @@
 """Scoring pass execution, verification retry, and database saving."""
 
 import json
+import logging
+import time
 from typing import Any, Dict, List
 import config
 from db import get_connection
 from app.pipeline.llm import call_gemini_json
 from app.pipeline.prompts import SCORING_SYSTEM_PROMPT
+from app.pipeline.telemetry import run_stage
 from app.pipeline.verification import verify_scoring_output
+
+logger = logging.getLogger("sabilab.pipeline.scoring")
 
 
 def build_scoring_prompt(transcript: List[Dict[str, Any]], readings: Dict[str, Any], clarifications: List[Dict[str, Any]], scenario: Dict[str, Any], checks: List[Dict[str, Any]]) -> str:
@@ -30,14 +35,36 @@ Score each criterion using only the rubric and student evidence. Return JSON mat
 def execute_scoring_pass(session_id: str, transcript: List[Dict[str, Any]], student_messages_map: Dict[str, str], readings: Dict[str, Any], clarifications: List[Dict[str, Any]], scenario: Dict[str, Any], checks: List[Dict[str, Any]]) -> Dict[str, Any]:
     """Run scoring pass, retry once if verification fails, and save scores to database."""
     prompt = build_scoring_prompt(transcript, readings, clarifications, scenario, checks)
-    result = call_gemini_json(SCORING_SYSTEM_PROMPT, prompt, session_id=session_id, call_type="scoring")
+    t_llm = time.time()
+    logger.info(f"[{session_id}] [llm_scoring] start")
+    try:
+        result = call_gemini_json(SCORING_SYSTEM_PROMPT, prompt, session_id=session_id, call_type="scoring")
+        logger.info(f"[{session_id}] [llm_scoring] done in {time.time() - t_llm:.2f}s")
+    except Exception:
+        logger.exception(f"[{session_id}] [llm_scoring] call failed after {time.time() - t_llm:.2f}s")
+        raise
 
-    # Verification and retry once if verification fails
-    is_valid, errors = verify_scoring_output(result, student_messages_map)
+    is_valid, errors = run_stage(
+        session_id,
+        "verification",
+        lambda: verify_scoring_output(result, student_messages_map),
+    )
+
     if not is_valid:
+        t_r = time.time()
+        logger.info(f"[{session_id}] [scoring_retry] start")
         retry_prompt = prompt + f"\nPrevious output failed verification with errors: {errors}. You must use exact quotes from the student. Try again."
-        result = call_gemini_json(SCORING_SYSTEM_PROMPT, retry_prompt, session_id=session_id, call_type="scoring_retry")
-        is_valid, errors = verify_scoring_output(result, student_messages_map)
+        try:
+            result = call_gemini_json(SCORING_SYSTEM_PROMPT, retry_prompt, session_id=session_id, call_type="scoring_retry")
+            logger.info(f"[{session_id}] [scoring_retry] done in {time.time() - t_r:.2f}s")
+            is_valid, errors = run_stage(
+                session_id,
+                "verification",
+                lambda: verify_scoring_output(result, student_messages_map),
+            )
+        except Exception:
+            logger.exception(f"[{session_id}] [scoring_retry] failed after {time.time() - t_r:.2f}s")
+            raise
 
     # Determine routing
     routing = "AI-assessed"
@@ -73,17 +100,25 @@ def execute_scoring_pass(session_id: str, transcript: List[Dict[str, Any]], stud
             (
                 session_id,
                 json.dumps(levels_map),
-                fb.get("strength", {}).get("note", "Good work on factual communication."),
-                fb.get("improvement", "Work on trade-off reasoning."),
-                fb.get("rewrite", "Practice structuring recommendations clearly."),
+                fb.get("strength", {}).get("note", "Good attempt"),
+                fb.get("improvement", "Continue practicing role-specific trade-offs"),
+                fb.get("rewrite", "I recommend an immediate payment of ₦150k to Kano Textiles."),
                 routing,
             ),
         )
         conn.execute("UPDATE sessions SET status = 'completed' WHERE id = ?", (session_id,))
         conn.commit()
+    except Exception:
+        logger.exception(f"[{session_id}] Database error saving scores/results")
+        raise
     finally:
         conn.close()
 
-    result["routing"] = routing
-    result["verification_passed"] = is_valid
-    return result
+    return {
+        "scores": result.get("scores", []),
+        "feedback": result.get("feedback", {}),
+        "flags": result.get("flags", {}),
+        "routing": routing,
+        "verification_passed": is_valid,
+        "verification_errors": errors,
+    }

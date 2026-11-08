@@ -1,8 +1,11 @@
 """Clarification gate to request restatements for unclear or non-English messages."""
 
+import logging
 from datetime import datetime, timezone
 from typing import Any, Dict, List
 from db import get_connection
+
+logger = logging.getLogger("sabilab.pipeline.gate")
 
 
 def evaluate_gate(session_id: str, reading_result: Dict[str, Any]) -> List[Dict[str, Any]]:
@@ -44,6 +47,9 @@ def evaluate_gate(session_id: str, reading_result: Dict[str, Any]) -> List[Dict[
         conn.execute("UPDATE sessions SET status = 'awaiting_clarification' WHERE id = ?", (session_id,))
         conn.commit()
         return saved
+    except Exception:
+        logger.exception(f"[{session_id}] Error in evaluate_gate database operations")
+        raise
     finally:
         conn.close()
 
@@ -59,6 +65,9 @@ def answer_clarification(session_id: str, message_id: str, answer: str) -> None:
         )
         conn.execute("UPDATE sessions SET status = 'clarified' WHERE id = ?", (session_id,))
         conn.commit()
+    except Exception:
+        logger.exception(f"[{session_id}] Error answering clarification for message {message_id}")
+        raise
     finally:
         conn.close()
 

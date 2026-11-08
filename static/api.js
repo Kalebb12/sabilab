@@ -64,7 +64,19 @@ const API = {
 
   async triggerScoring(sessionId) {
     const res = await fetch(`/session/${sessionId}/score`, { method: "POST" });
-    if (!res.ok) throw new Error("Scoring pipeline failed.");
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || "Scoring pipeline failed.");
+    }
+    return res.json();
+  },
+
+  async getPipelineStatus(sessionId) {
+    const res = await fetch(`/session/${sessionId}/pipeline-status`);
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || "Failed to fetch pipeline status.");
+    }
     return res.json();
   },
 

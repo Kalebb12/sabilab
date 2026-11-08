@@ -1,5 +1,6 @@
 """FastAPI routes for public Evidence Cards."""
 
+import logging
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import HTMLResponse
 from app.card import publish_card, revoke_card, get_card_payload
@@ -7,6 +8,7 @@ from app.card_view import render_card_html
 from app.schemas import CardPublishRequest
 
 router = APIRouter()
+logger = logging.getLogger("sabilab.card_routes")
 
 
 @router.post("/session/{session_id}/card")
@@ -15,6 +17,7 @@ def create_card(session_id: str, req: CardPublishRequest = CardPublishRequest())
     try:
         return publish_card(session_id, req.visible_fields)
     except ValueError as e:
+        logger.exception("[%s] Evidence Card publication failed", session_id)
         raise HTTPException(status_code=404, detail=str(e))
 
 

@@ -1,5 +1,6 @@
 """FastAPI server for SabiLab."""
 
+import logging
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
@@ -12,6 +13,7 @@ from app.task import save_task
 from app.cost import get_cost_summary
 from app.draft import save_draft_backup, get_draft_backup
 from app.pipeline.pipeline import run_pipeline
+from app.pipeline.telemetry import get_pipeline_status
 from app.pipeline.gate import answer_clarification
 from app.results import get_session_results
 from app.review_routes import router as review_router
@@ -33,6 +35,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="SabiLab API", lifespan=lifespan)
+logger = logging.getLogger("sabilab.main")
 app.mount("/static", StaticFiles(directory=str(config.STATIC_DIR)), name="static")
 app.include_router(review_router)
 app.include_router(card_router)
@@ -61,6 +64,7 @@ def start_session(req: SessionCreateRequest):
     try:
         return create_session(req.model_dump())
     except ValueError as e:
+        logger.exception("Session creation failed")
         raise HTTPException(status_code=400, detail=str(e))
 
 
@@ -70,6 +74,7 @@ def send_message(session_id: str, req: MessagePostRequest):
     try:
         return post_message(session_id, req.sender, req.text)
     except ValueError as e:
+        logger.exception("[%s] Message posting failed", session_id)
         msg = str(e)
         if "not found" in msg.lower():
             raise HTTPException(status_code=404, detail=msg)
@@ -103,6 +108,7 @@ def submit_task(req: TaskSubmitRequest):
     try:
         return save_task(req.session_id, req.text, req.user_id)
     except ValueError as e:
+        logger.exception("[%s] Task submission failed", req.session_id)
         raise HTTPException(status_code=404, detail=str(e))
 
 
@@ -112,7 +118,21 @@ def trigger_scoring(session_id: str):
     try:
         return run_pipeline(session_id)
     except ValueError as e:
-        raise HTTPException(status_code=404, detail=str(e))
+        logger.exception(f"[{session_id}] Session not found or invalid in scoring")
+        status_code = 404 if "not found" in str(e).lower() else 500
+        raise HTTPException(status_code=status_code, detail=str(e))
+    except Exception as e:
+        logger.exception(f"[{session_id}] Pipeline execution failed")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/session/{session_id}/pipeline-status")
+def pipeline_status(session_id: str):
+    """Return the current persisted status of a session's scoring pipeline."""
+    status = get_pipeline_status(session_id)
+    if status is None:
+        raise HTTPException(status_code=404, detail="No pipeline run exists for this session.")
+    return status
 
 
 @app.post("/session/{session_id}/clarify")
@@ -122,22 +142,27 @@ def submit_clarification(session_id: str, req: ClarificationAnswerRequest):
         answer_clarification(session_id, req.message_id, req.answer)
         return run_pipeline(session_id)
     except ValueError as e:
-        raise HTTPException(status_code=404, detail=str(e))
+        logger.exception(f"[{session_id}] Session not found or invalid in clarification")
+        status_code = 404 if "not found" in str(e).lower() else 500
+        raise HTTPException(status_code=status_code, detail=str(e))
+    except Exception as e:
+        logger.exception(f"[{session_id}] Pipeline execution after clarification failed")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.get("/session/{session_id}/results")
 def fetch_results(session_id: str):
-    """Retrieve verified session scores, did well, improve, recommendations, and badges."""
+    """Retrieve verified session scores, feedback, and badges."""
     return get_session_results(session_id)
 
 
 @app.get("/session/{session_id}/cost")
 def session_cost(session_id: str):
-    """Return token counts and cost summary for all LLM calls in a session."""
+    """Return token counts and cost summary for a session."""
     return get_cost_summary(session_id)
 
 
 @app.get("/health")
 def health_check():
-    """Return health status of the application."""
+    """Return health status."""
     return {"status": "ok"}

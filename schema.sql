@@ -135,3 +135,11 @@ CREATE TABLE IF NOT EXISTS events (
     details TEXT,
     FOREIGN KEY (session_id) REFERENCES sessions(id)
 );
+
+CREATE TABLE IF NOT EXISTS pipeline_status (
+    session_id TEXT PRIMARY KEY,
+    status TEXT NOT NULL CHECK (status IN ('running', 'done', 'failed')),
+    current_stage TEXT,
+    error_message TEXT,
+    updated_at TEXT NOT NULL
+);
