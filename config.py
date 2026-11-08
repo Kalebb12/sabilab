@@ -25,6 +25,9 @@ PROMPT_VERSION_READING = "v0.2"
 PROMPT_VERSION_SCORING = "v0.2"
 RUBRIC_VERSION = "v0.2"
 
+# Reviewer password (server-side only, never sent to browser)
+REVIEW_PASSWORD = os.getenv("REVIEW_PASSWORD", "")
+
 # Session timing (in seconds)
 TIMING_REAL = {
     "brief": 180,

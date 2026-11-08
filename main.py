@@ -1,8 +1,8 @@
 """FastAPI server for SabiLab."""
 
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, HTTPException
-from fastapi.responses import HTMLResponse
+from fastapi import FastAPI, Form, HTTPException, Request
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 import config
 from db import init_db
@@ -14,6 +14,7 @@ from app.pipeline.gate import answer_clarification
 from app.results import get_session_results
 from app.card import publish_card, revoke_card, get_card_payload
 from app.card_view import render_card_html
+from app.review import render_review_html, list_review_rows, apply_review
 from app.schemas import (
     SessionCreateRequest,
     MessagePostRequest,
@@ -128,3 +129,34 @@ def revoke_public_card(slug: str):
 def health_check():
     """Return health status of the application."""
     return {"status": "ok"}
+
+
+# --- Reviewer dashboard (password-protected, server-side only) ---
+
+@app.get("/review", response_class=HTMLResponse)
+def review_page(request: Request, pw: str = ""):
+    """Render reviewer dashboard; show results when password matches."""
+    ok = bool(config.REVIEW_PASSWORD and pw == config.REVIEW_PASSWORD)
+    rows = list_review_rows() if ok else []
+    return HTMLResponse(render_review_html(ok, rows, pw=pw))
+
+
+@app.post("/review/login")
+def review_login(password: str = Form(...)):
+    """Redirect back to review page with password as query param."""
+    return RedirectResponse(url=f"/review?pw={password}", status_code=303)
+
+
+@app.post("/review/confirm")
+def review_confirm(
+    pw: str = Form(...),
+    score_id: int = Form(...),
+    session_id: str = Form(...),
+    level: str = Form(...),
+    action: str = Form(...),
+):
+    """Apply reviewer decision and redirect back to dashboard."""
+    if not config.REVIEW_PASSWORD or pw != config.REVIEW_PASSWORD:
+        raise HTTPException(status_code=403, detail="Wrong password.")
+    apply_review(score_id, session_id, level, action)
+    return RedirectResponse(url=f"/review?pw={pw}", status_code=303)
