@@ -3,6 +3,7 @@
   "title": "Adaeze’s Fabrics",
   "status": "full",
   "student_role": "Accountant",
+  "student_brief": "You are the Accountant at Adaeze's Fabrics. Mrs Bello is asking for a 20% discount and 2pm delivery. We have ₦480,000 cash on hand, but Kano Textiles has an overdue invoice of ₦350,000. Your job is to keep our cash safe and tell Adaeze what we can afford.",
   "roster": [
     {
       "id": "sales",
