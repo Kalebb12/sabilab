@@ -116,27 +116,54 @@
     {
       "id": "K1",
       "label": "Cash on hand (₦480,000)",
-      "patterns": ["480000", "480k"]
+      "patterns": [
+        "480000",
+        "480k"
+      ]
     },
     {
       "id": "K2",
       "label": "Overdue invoice (₦350,000)",
-      "patterns": ["350000", "350k"]
+      "patterns": [
+        "350000",
+        "350k"
+      ]
     },
     {
       "id": "K3",
       "label": "Cash remaining after full invoice (₦130,000)",
-      "patterns": ["130000", "130k"]
+      "patterns": [
+        "130000",
+        "130k"
+      ]
     },
     {
       "id": "K4",
       "label": "Discount mentioned (20% or counter-offer)",
-      "patterns": ["20%", "20", "10%", "10", "5%", "5", "15%", "15"]
+      "patterns": [
+        "20%",
+        "20",
+        "10%",
+        "10",
+        "5%",
+        "5",
+        "15%",
+        "15"
+      ]
     },
     {
       "id": "K5",
       "label": "Partial payment figure",
-      "patterns": ["150000", "150k", "200000", "200k", "100000", "100k", "175000", "175k"]
+      "patterns": [
+        "150000",
+        "150k",
+        "200000",
+        "200k",
+        "100000",
+        "100k",
+        "175000",
+        "175k"
+      ]
     }
   ],
   "approaches": {
@@ -162,6 +189,60 @@
       "overdue_kano_invoice": "₦400,000",
       "cash_remaining_if_paid_in_full": "₦150,000",
       "mrs_bello_discount_request": "15%"
-    }
+    },
+    "checks": [
+      {
+        "id": "K1",
+        "label": "Cash on hand (₦550,000)",
+        "patterns": [
+          "550000",
+          "550k"
+        ]
+      },
+      {
+        "id": "K2",
+        "label": "Overdue invoice (₦400,000)",
+        "patterns": [
+          "400000",
+          "400k"
+        ]
+      },
+      {
+        "id": "K3",
+        "label": "Cash remaining after full invoice (₦150,000)",
+        "patterns": [
+          "150000",
+          "150k"
+        ]
+      },
+      {
+        "id": "K4",
+        "label": "Discount mentioned (15% or counter-offer)",
+        "patterns": [
+          "15%",
+          "15",
+          "10%",
+          "10",
+          "5%",
+          "5",
+          "20%",
+          "20"
+        ]
+      },
+      {
+        "id": "K5",
+        "label": "Partial payment figure",
+        "patterns": [
+          "200000",
+          "200k",
+          "100000",
+          "100k",
+          "175000",
+          "175k",
+          "250000",
+          "250k"
+        ]
+      }
+    ]
   }
 }

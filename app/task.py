@@ -14,11 +14,12 @@ def save_task(session_id: str, text: str, user_id: Optional[str] = None, current
     conn = get_connection()
     now = current_time or datetime.now(timezone.utc)
     try:
-        sess = conn.execute("SELECT user_id, scenario_id FROM sessions WHERE id = ?", (session_id,)).fetchone()
+        sess = conn.execute("SELECT user_id, scenario_id, variant FROM sessions WHERE id = ?", (session_id,)).fetchone()
         if not sess:
             raise ValueError(f"Session '{session_id}' not found.")
 
         uid = user_id or sess["user_id"]
+        variant = sess["variant"]
         cursor = conn.execute(
             "INSERT INTO tasks (session_id, user_id, text, submitted_time) VALUES (?, ?, ?, ?)",
             (session_id, uid, text, now.isoformat()),
@@ -31,7 +32,9 @@ def save_task(session_id: str, text: str, user_id: Optional[str] = None, current
 
     log_event(session_id, "submit", json.dumps({"task_id": task_id, "length": len(text)}), now)
     scenario = load_scenario(sess["scenario_id"])
-    check_results = report_checks(text, scenario["checks"])
+    # Use variant B checks when session is variant B
+    checks_list = scenario.get("variant_b", {}).get("checks", scenario["checks"]) if variant == "B" else scenario["checks"]
+    check_results = report_checks(text, checks_list)
 
     return {
         "task_id": task_id,

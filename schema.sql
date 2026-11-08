@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS sessions (
     user_id TEXT NOT NULL,
     scenario_id TEXT NOT NULL,
     variant TEXT NOT NULL,
+    attempt_number INTEGER NOT NULL DEFAULT 1,
     mode TEXT NOT NULL,
     language TEXT NOT NULL DEFAULT 'en',
     start_time TEXT NOT NULL,

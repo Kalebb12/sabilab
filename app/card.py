@@ -71,4 +71,5 @@ def get_card_payload(slug: str) -> Optional[Dict[str, Any]]:
         "recommendation": results.get("recommendation", {}),
         "routing": results.get("routing", "AI-assessed"),
         "published_time": card["published_time"],
+        "comparison": results.get("comparison"),
     }

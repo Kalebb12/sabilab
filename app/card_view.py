@@ -59,6 +59,20 @@ def render_card_html(card: Optional[Dict[str, Any]]) -> str:
             <p>Level: <strong>{badge.get('level', 'Foundation')}</strong></p>
         </div>"""
 
+    comp = card.get("comparison")
+    comp_html = ""
+    if comp and comp.get("rows"):
+        comp_rows = "".join(
+            f"<tr><td>{r['criterion']}</td><td><span class='badge-pill'>{r['attempt_1']}</span></td><td><span class='badge-pill'>{r['attempt_2']}</span></td></tr>"
+            for r in comp["rows"]
+        )
+        comp_html = f"""
+        <div class="section-title">Attempt Comparison</div>
+        <table class="comp-table">
+            <thead><tr><th>Criterion</th><th>Attempt 1</th><th>Attempt 2</th></tr></thead>
+            <tbody>{comp_rows}</tbody>
+        </table>"""
+
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -85,6 +99,9 @@ def render_card_html(card: Optional[Dict[str, Any]]) -> str:
         .rec-box {{ background: #fefce8; border: 1px solid #fef08a; border-radius: 10px; padding: 1rem; margin-bottom: 1.25rem; }}
         .rec-box h3 {{ font-size: 0.95rem; color: #854d0e; margin-bottom: 0.35rem; }}
         .rec-box p {{ font-size: 0.85rem; color: #713f12; margin-bottom: 0.25rem; }}
+        .comp-table {{ width: 100%; border-collapse: collapse; margin-bottom: 1.25rem; font-size: 0.85rem; }}
+        .comp-table th, .comp-table td {{ padding: 6px 8px; border: 1px solid #e2e8f0; text-align: left; }}
+        .comp-table th {{ background: #f8fafc; color: #334155; }}
         .limits {{ background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0.85rem; font-size: 0.78rem; color: #475569; margin-top: 1.5rem; }}
     </style>
 </head>
@@ -98,6 +115,7 @@ def render_card_html(card: Optional[Dict[str, Any]]) -> str:
         {badge_html}
         <div class="section-title">Verified Competencies</div>
         {scores_html}
+        {comp_html}
         <div class="section-title">Targeted Growth Drill</div>
         <div class="rec-box">
             <h3>{rec.get('area', 'Skill Drill')}</h3>

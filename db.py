@@ -23,6 +23,10 @@ def init_db(db_path: Optional[Path] = None) -> None:
         with open(SCHEMA_PATH, "r", encoding="utf-8") as f:
             schema_sql = f.read()
         conn.executescript(schema_sql)
+        # Migration: add attempt_number column if missing (safe on existing DBs)
+        cols = [r[1] for r in conn.execute("PRAGMA table_info(sessions)").fetchall()]
+        if "attempt_number" not in cols:
+            conn.execute("ALTER TABLE sessions ADD COLUMN attempt_number INTEGER NOT NULL DEFAULT 1")
         conn.commit()
     finally:
         conn.close()

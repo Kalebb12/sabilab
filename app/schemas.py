@@ -5,6 +5,7 @@ from pydantic import BaseModel
 
 
 class SessionCreateRequest(BaseModel):
+    user_id: Optional[str] = None
     first_name: str = "Student"
     consent: bool = False
     scenario_id: str = "adaeze"

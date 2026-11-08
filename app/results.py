@@ -85,8 +85,11 @@ def get_recommendation_for_weakest(scores: List[Dict[str, Any]]) -> Dict[str, st
 
 def get_session_results(session_id: str) -> Dict[str, Any]:
     """Compile scored criteria with quotes, did well, improve, recommendations, and badges."""
+    from app.comparison import get_comparison
+
     conn = get_connection()
     try:
+        sess = conn.execute("SELECT user_id, scenario_id FROM sessions WHERE id = ?", (session_id,)).fetchone()
         scores = conn.execute(
             "SELECT dimension, criterion, level, confidence, evidence, counter_evidence, reason FROM scores WHERE session_id = ?",
             (session_id,),
@@ -112,6 +115,8 @@ def get_session_results(session_id: str) -> Dict[str, Any]:
     if not badge_data and score_list and result_row:
         badge_data = evaluate_badges(session_id, score_list, result_row["routing"])
 
+    comparison = get_comparison(sess["user_id"], sess["scenario_id"]) if sess else None
+
     return {
         "session_id": session_id,
         "scores": score_list,
@@ -120,4 +125,5 @@ def get_session_results(session_id: str) -> Dict[str, Any]:
         "routing": result_row["routing"] if result_row else "AI-assessed",
         "recommendation": recommendation,
         "badge": badge_data,
+        "comparison": comparison,
     }
