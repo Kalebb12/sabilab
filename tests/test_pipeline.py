@@ -2,6 +2,7 @@
 
 import pytest
 from fastapi.testclient import TestClient
+import config
 from db import init_db, get_connection
 from app.session import create_session, post_message
 from app.task import save_task
@@ -132,7 +133,7 @@ def test_full_session_produces_verified_scores():
     assert len(score_rows) == 1
     assert score_rows[0]["criterion"] == "A1 Accuracy"
     assert score_rows[0]["level"] == "Proficient"
-    assert "gemini-2.5-flash" in score_rows[0]["model_and_version"]
+    assert config.GEMINI_MODEL in score_rows[0]["model_and_version"]
     assert score_rows[0]["prompt_version"] == "v0.2"
 
     result_row = conn.execute("SELECT routing, did_well, improve FROM results WHERE session_id = ?", (sid,)).fetchone()
