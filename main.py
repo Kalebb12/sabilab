@@ -9,6 +9,7 @@ import config
 from db import init_db
 from app.loader import list_scenarios
 from app.session import create_session, post_message, get_messages
+from app.task import save_task
 
 
 class SessionCreateRequest(BaseModel):
@@ -22,6 +23,12 @@ class SessionCreateRequest(BaseModel):
 class MessagePostRequest(BaseModel):
     sender: str
     text: str
+
+
+class TaskSubmitRequest(BaseModel):
+    session_id: str
+    text: str
+    user_id: Optional[str] = None
 
 
 @asynccontextmanager
@@ -67,6 +74,15 @@ def send_message(session_id: str, req: MessagePostRequest):
 def list_messages(session_id: str):
     """Retrieve all messages for a session, checking for twist trigger."""
     return get_messages(session_id)
+
+
+@app.post("/task")
+def submit_task(req: TaskSubmitRequest):
+    """Save the individual task deliverable and report factual check results."""
+    try:
+        return save_task(req.session_id, req.text, req.user_id)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
 
 
 @app.get("/health")
