@@ -10,6 +10,8 @@ from db import init_db
 from app.loader import list_scenarios
 from app.session import create_session, post_message, get_messages
 from app.task import save_task
+from app.pipeline.pipeline import run_pipeline
+from app.pipeline.gate import answer_clarification
 
 
 class SessionCreateRequest(BaseModel):
@@ -31,6 +33,11 @@ class TaskSubmitRequest(BaseModel):
     user_id: Optional[str] = None
 
 
+class ClarificationAnswerRequest(BaseModel):
+    message_id: str
+    answer: str
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Initialize database tables on application startup."""
@@ -39,8 +46,6 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="SabiLab API", lifespan=lifespan)
-
-# Mount static files directory for client assets
 app.mount("/static", StaticFiles(directory=str(config.STATIC_DIR)), name="static")
 
 
@@ -81,6 +86,25 @@ def submit_task(req: TaskSubmitRequest):
     """Save the individual task deliverable and report factual check results."""
     try:
         return save_task(req.session_id, req.text, req.user_id)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
+@app.post("/session/{session_id}/score")
+def trigger_scoring(session_id: str):
+    """Execute the full assessment pipeline (reading, clarification gate, scoring)."""
+    try:
+        return run_pipeline(session_id)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
+@app.post("/session/{session_id}/clarify")
+def submit_clarification(session_id: str, req: ClarificationAnswerRequest):
+    """Submit a clarification answer and resume the assessment pipeline."""
+    try:
+        answer_clarification(session_id, req.message_id, req.answer)
+        return run_pipeline(session_id)
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
 

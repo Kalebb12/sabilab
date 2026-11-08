@@ -15,8 +15,9 @@ STATIC_DIR = BASE_DIR / "static"
 
 # Gemini API settings
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
-GEMINI_MODEL_PERSONA = "gemini-2.5-flash"
-GEMINI_MODEL_SCORING = "gemini-2.5-pro"
+GEMINI_MODEL = "gemini-2.5-flash"
+GEMINI_MODEL_PERSONA = GEMINI_MODEL
+GEMINI_MODEL_SCORING = GEMINI_MODEL
 GEMINI_API_BASE_URL = os.getenv("GEMINI_API_BASE_URL", "")
 
 # Prompt versions
