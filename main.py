@@ -1,10 +1,9 @@
 """FastAPI server for SabiLab."""
 
 from contextlib import asynccontextmanager
-from typing import Any, Dict, List, Optional
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel
 import config
 from db import init_db
 from app.loader import list_scenarios
@@ -12,30 +11,16 @@ from app.session import create_session, post_message, get_messages
 from app.task import save_task
 from app.pipeline.pipeline import run_pipeline
 from app.pipeline.gate import answer_clarification
-
-
-class SessionCreateRequest(BaseModel):
-    first_name: str = "Student"
-    consent: bool = False
-    scenario_id: str = "adaeze"
-    teammate_ids: Optional[List[str]] = None
-    mode: str = "demo"
-
-
-class MessagePostRequest(BaseModel):
-    sender: str
-    text: str
-
-
-class TaskSubmitRequest(BaseModel):
-    session_id: str
-    text: str
-    user_id: Optional[str] = None
-
-
-class ClarificationAnswerRequest(BaseModel):
-    message_id: str
-    answer: str
+from app.results import get_session_results
+from app.card import publish_card, revoke_card, get_card_payload
+from app.card_view import render_card_html
+from app.schemas import (
+    SessionCreateRequest,
+    MessagePostRequest,
+    TaskSubmitRequest,
+    ClarificationAnswerRequest,
+    CardPublishRequest,
+)
 
 
 @asynccontextmanager
@@ -107,6 +92,36 @@ def submit_clarification(session_id: str, req: ClarificationAnswerRequest):
         return run_pipeline(session_id)
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
+
+
+@app.get("/session/{session_id}/results")
+def fetch_results(session_id: str):
+    """Retrieve verified session scores, did well, improve, recommendations, and badges."""
+    return get_session_results(session_id)
+
+
+@app.post("/session/{session_id}/card")
+def create_card(session_id: str, req: CardPublishRequest = CardPublishRequest()):
+    """Publish an unguessable public Evidence Card."""
+    try:
+        return publish_card(session_id, req.visible_fields)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
+@app.get("/card/{slug}", response_class=HTMLResponse)
+def view_public_card(slug: str):
+    """Serve the public mobile-first Evidence Card without requiring login."""
+    payload = get_card_payload(slug)
+    return HTMLResponse(content=render_card_html(payload))
+
+
+@app.post("/card/{slug}/revoke")
+def revoke_public_card(slug: str):
+    """Revoke an active public Evidence Card."""
+    if not revoke_card(slug):
+        raise HTTPException(status_code=404, detail="Card not found or already revoked.")
+    return {"status": "revoked", "slug": slug}
 
 
 @app.get("/health")
