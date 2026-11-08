@@ -10,7 +10,7 @@ import config
 def list_scenarios() -> List[Dict[str, str]]:
     """Return a summary list of all available scenarios."""
     scenarios = []
-    for filepath in config.SCENARIOS_DIR.glob("*.json"):
+    for filepath in sorted(config.SCENARIOS_DIR.glob("*.json")):
         with open(filepath, "r", encoding="utf-8") as f:
             data = json.load(f)
             scenarios.append({
@@ -29,15 +29,15 @@ def load_scenario(scenario_id: str) -> Dict[str, Any]:
         raise FileNotFoundError(f"Scenario '{scenario_id}' not found.")
     with open(filepath, "r", encoding="utf-8") as f:
         data = json.load(f)
-    _validate_scenario(data)
+    validate_scenario(data)
     return data
 
 
-def _validate_scenario(data: Dict[str, Any]) -> None:
+def validate_scenario(data: Dict[str, Any]) -> None:
     """Ensure all required fields exist in the scenario data."""
     required_fields = [
         "id", "title", "status", "student_role", "roster",
-        "owner", "client", "facts", "timeline", "twist",
+        "owner", "facts", "timeline", "twist",
         "task", "checks", "approaches", "register", "variant_b"
     ]
     for field in required_fields:
@@ -47,9 +47,7 @@ def _validate_scenario(data: Dict[str, Any]) -> None:
 
 def normalize_text_for_checks(text: str) -> str:
     """Normalize text by expanding 'k' to thousands and stripping commas, spaces, and naira signs."""
-    # Convert trailing 'k' on numbers to '000' (e.g. 350k -> 350000)
     expanded = re.sub(r'(\d+)[kK]\b', r'\g<1>000', text)
-    # Remove commas, spaces, and currency symbols
     cleaned = re.sub(r'[₦\s,]', '', expanded)
     return cleaned.lower()
 

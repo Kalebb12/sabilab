@@ -1,5 +1,5 @@
 {
-  "id": "adaezes_fabrics",
+  "id": "adaeze",
   "title": "Adaeze’s Fabrics",
   "status": "full",
   "student_role": "Accountant",
@@ -43,20 +43,12 @@
   ],
   "owner": {
     "name": "Adaeze",
-    "character": "Owner of Adaeze's Fabrics. Practical, focused on cash flow and survival.",
+    "character": "Owner of Adaeze's Fabrics. Practical, focused on cash flow and business survival.",
     "scripted_lines": {
       "opening": "Mrs Bello wants 20% off and delivery by 2pm. Sort it out between you.",
       "follow_up": "I need a plan before this huddle ends.",
       "twist": "Bad news. Kano Textiles has cancelled our supply because the ₦350,000 invoice is overdue. They will talk again if we pay something today. Give me options I can afford.",
       "after_twist": "Options I can afford, please."
-    }
-  },
-  "client": {
-    "name": "Mrs Bello",
-    "character": "Key VIP client. Demanding, proud, values prompt delivery and loyalty recognition.",
-    "scripted_lines": {
-      "opening": "I need my delivery of blue Ankara by 2pm sharp. And given my continuous patronage, I expect a 20% discount on this order.",
-      "follow_up": "I have not heard back on my delivery confirmation. What is the status?"
     }
   },
   "facts": [
@@ -148,7 +140,7 @@
   ],
   "approaches": {
     "acceptable": [
-      "Pay Kano Textiles in full (₦350,000) leaving ₦130,000 cash buffer, and reject or counter Mrs Bello's discount to 5-10% to protect margins.",
+      "Pay Kano Textiles in full (₦350,000) leaving ₦130,000 cash buffer, and decline or counter Mrs Bello's discount to 5-10% to protect margins.",
       "Pay Kano Textiles a partial amount (e.g., ₦150,000 to ₦200,000) to restore supply while keeping cash on hand (₦280,000 to ₦330,000), and offer Mrs Bello a smaller discount (e.g., 10%) tied to immediate payment.",
       "Deliver Mrs Bello's order by 2pm at full price or with a small delivery discount, using revenue to support supplier settlement."
     ],
