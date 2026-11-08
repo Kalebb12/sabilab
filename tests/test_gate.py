@@ -87,3 +87,67 @@ def test_vague_message_triggers_gate_and_clarification_flow():
     res_data = ans_resp.json()
     assert res_data["status"] == "completed"
     assert res_data["scoring"]["routing"] == "AI-assessed"
+
+
+def test_non_english_message_triggers_restatement_gate():
+    """Verify that a non-English message triggers a restatement question in English."""
+    sess = create_session({"first_name": "Caleb", "consent": True, "mode": "demo"})
+    sid = sess["session_id"]
+    post_message(sid, "Caleb", "Bawo ni, a gbodo sanwo fun Kano Textiles.")
+    save_task(sid, "Pay Kano 150k and give Mrs Bello 10% discount.")
+
+    def mock_llm(system_instruction, prompt):
+        if "Reading pass" in system_instruction:
+            return {
+                "readings": [
+                    {
+                        "message_id": "M4",
+                        "language": "non_english",
+                        "intent": "Unknown non-English communication",
+                        "clarity": "unclear",
+                        "ambiguity": "message in Yoruba",
+                        "tone": "neutral",
+                        "tone_flags": [],
+                        "register_fit": "unknown",
+                    }
+                ],
+                "clarification_requests": [],
+                "possible_injection": False,
+                "severe_tone": False,
+            }
+        else:
+            return {
+                "scores": [
+                    {
+                        "dimension": "Communication",
+                        "criterion": "C1 Clarity",
+                        "level": "Foundation",
+                        "confidence": "high",
+                        "evidence": "Pay Kano 150k",
+                        "evidence_message_id": "M7",
+                        "counter_evidence": None,
+                        "reason": "Restated in English clearly.",
+                    }
+                ],
+                "feedback": {"strength": {"quote": "Pay Kano 150k", "note": "Clear numbers"}, "improvement": "Stay in English", "rewrite": "Pay Kano first."},
+                "flags": {"possible_injection": False, "severe_tone": False, "needs_human_review": False, "review_reason": None},
+            }
+
+    set_test_llm_handler(mock_llm)
+    client = TestClient(app)
+
+    # 1. Trigger scoring -> should trigger restatement question
+    resp = client.post(f"/session/{sid}/score")
+    assert resp.status_code == 200
+    gate_data = resp.json()
+    assert gate_data["status"] == "awaiting_clarification"
+    assert len(gate_data["clarification_requests"]) == 1
+    assert "English" in gate_data["clarification_requests"][0]["question"]
+
+    # 2. Answer clarification in English -> should resume and complete
+    ans_resp = client.post(
+        f"/session/{sid}/clarify",
+        json={"message_id": "M4", "answer": "Hello, we must pay Kano Textiles today."},
+    )
+    assert ans_resp.status_code == 200
+    assert ans_resp.json()["status"] == "completed"

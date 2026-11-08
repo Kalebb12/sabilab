@@ -31,3 +31,7 @@ class ClarificationAnswerRequest(BaseModel):
 
 class CardPublishRequest(BaseModel):
     visible_fields: Optional[List[str]] = None
+
+
+class DraftSaveRequest(BaseModel):
+    text: str

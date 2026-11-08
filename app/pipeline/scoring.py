@@ -30,13 +30,13 @@ Score each criterion using only the rubric and student evidence. Return JSON mat
 def execute_scoring_pass(session_id: str, transcript: List[Dict[str, Any]], student_messages_map: Dict[str, str], readings: Dict[str, Any], clarifications: List[Dict[str, Any]], scenario: Dict[str, Any], checks: List[Dict[str, Any]]) -> Dict[str, Any]:
     """Run scoring pass, retry once if verification fails, and save scores to database."""
     prompt = build_scoring_prompt(transcript, readings, clarifications, scenario, checks)
-    result = call_gemini_json(SCORING_SYSTEM_PROMPT, prompt)
+    result = call_gemini_json(SCORING_SYSTEM_PROMPT, prompt, session_id=session_id, call_type="scoring")
 
     # Verification and retry once if verification fails
     is_valid, errors = verify_scoring_output(result, student_messages_map)
     if not is_valid:
         retry_prompt = prompt + f"\nPrevious output failed verification with errors: {errors}. You must use exact quotes from the student. Try again."
-        result = call_gemini_json(SCORING_SYSTEM_PROMPT, retry_prompt)
+        result = call_gemini_json(SCORING_SYSTEM_PROMPT, retry_prompt, session_id=session_id, call_type="scoring_retry")
         is_valid, errors = verify_scoring_output(result, student_messages_map)
 
     # Determine routing

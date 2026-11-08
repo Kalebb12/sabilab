@@ -1,26 +1,27 @@
 """FastAPI server for SabiLab."""
 
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, Form, HTTPException, Request
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi import FastAPI, HTTPException
+from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 import config
 from db import init_db
 from app.loader import list_scenarios
 from app.session import create_session, post_message, get_messages
 from app.task import save_task
+from app.cost import get_cost_summary
+from app.draft import save_draft_backup, get_draft_backup
 from app.pipeline.pipeline import run_pipeline
 from app.pipeline.gate import answer_clarification
 from app.results import get_session_results
-from app.card import publish_card, revoke_card, get_card_payload
-from app.card_view import render_card_html
-from app.review import render_review_html, list_review_rows, apply_review
+from app.review_routes import router as review_router
+from app.card_routes import router as card_router
 from app.schemas import (
     SessionCreateRequest,
     MessagePostRequest,
     TaskSubmitRequest,
     ClarificationAnswerRequest,
-    CardPublishRequest,
+    DraftSaveRequest,
 )
 
 
@@ -33,6 +34,17 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="SabiLab API", lifespan=lifespan)
 app.mount("/static", StaticFiles(directory=str(config.STATIC_DIR)), name="static")
+app.include_router(review_router)
+app.include_router(card_router)
+
+
+@app.get("/")
+def serve_index():
+    """Serve the single-page application interface if present."""
+    index_file = config.STATIC_DIR / "index.html"
+    if index_file.exists():
+        return FileResponse(index_file)
+    return {"message": "SabiLab API running", "scenarios": "/scenarios"}
 
 
 @app.get("/scenarios")
@@ -58,13 +70,31 @@ def send_message(session_id: str, req: MessagePostRequest):
     try:
         return post_message(session_id, req.sender, req.text)
     except ValueError as e:
-        raise HTTPException(status_code=404, detail=str(e))
+        msg = str(e)
+        if "not found" in msg.lower():
+            raise HTTPException(status_code=404, detail=msg)
+        elif "rate limit" in msg.lower():
+            raise HTTPException(status_code=429, detail=msg)
+        raise HTTPException(status_code=400, detail=msg)
 
 
 @app.get("/session/{session_id}/messages")
 def list_messages(session_id: str):
     """Retrieve all messages for a session, checking for twist trigger."""
     return get_messages(session_id)
+
+
+@app.post("/session/{session_id}/draft")
+def record_draft(session_id: str, req: DraftSaveRequest):
+    """Persist an in-progress draft backup for a session."""
+    save_draft_backup(session_id, req.text)
+    return {"status": "saved", "session_id": session_id}
+
+
+@app.get("/session/{session_id}/draft")
+def fetch_draft(session_id: str):
+    """Retrieve the latest autosaved draft backup for a session."""
+    return {"session_id": session_id, "draft": get_draft_backup(session_id)}
 
 
 @app.post("/task")
@@ -101,62 +131,13 @@ def fetch_results(session_id: str):
     return get_session_results(session_id)
 
 
-@app.post("/session/{session_id}/card")
-def create_card(session_id: str, req: CardPublishRequest = CardPublishRequest()):
-    """Publish an unguessable public Evidence Card."""
-    try:
-        return publish_card(session_id, req.visible_fields)
-    except ValueError as e:
-        raise HTTPException(status_code=404, detail=str(e))
-
-
-@app.get("/card/{slug}", response_class=HTMLResponse)
-def view_public_card(slug: str):
-    """Serve the public mobile-first Evidence Card without requiring login."""
-    payload = get_card_payload(slug)
-    return HTMLResponse(content=render_card_html(payload))
-
-
-@app.post("/card/{slug}/revoke")
-def revoke_public_card(slug: str):
-    """Revoke an active public Evidence Card."""
-    if not revoke_card(slug):
-        raise HTTPException(status_code=404, detail="Card not found or already revoked.")
-    return {"status": "revoked", "slug": slug}
+@app.get("/session/{session_id}/cost")
+def session_cost(session_id: str):
+    """Return token counts and cost summary for all LLM calls in a session."""
+    return get_cost_summary(session_id)
 
 
 @app.get("/health")
 def health_check():
     """Return health status of the application."""
     return {"status": "ok"}
-
-
-# --- Reviewer dashboard (password-protected, server-side only) ---
-
-@app.get("/review", response_class=HTMLResponse)
-def review_page(request: Request, pw: str = ""):
-    """Render reviewer dashboard; show results when password matches."""
-    ok = bool(config.REVIEW_PASSWORD and pw == config.REVIEW_PASSWORD)
-    rows = list_review_rows() if ok else []
-    return HTMLResponse(render_review_html(ok, rows, pw=pw))
-
-
-@app.post("/review/login")
-def review_login(password: str = Form(...)):
-    """Redirect back to review page with password as query param."""
-    return RedirectResponse(url=f"/review?pw={password}", status_code=303)
-
-
-@app.post("/review/confirm")
-def review_confirm(
-    pw: str = Form(...),
-    score_id: int = Form(...),
-    session_id: str = Form(...),
-    level: str = Form(...),
-    action: str = Form(...),
-):
-    """Apply reviewer decision and redirect back to dashboard."""
-    if not config.REVIEW_PASSWORD or pw != config.REVIEW_PASSWORD:
-        raise HTTPException(status_code=403, detail="Wrong password.")
-    apply_review(score_id, session_id, level, action)
-    return RedirectResponse(url=f"/review?pw={pw}", status_code=303)

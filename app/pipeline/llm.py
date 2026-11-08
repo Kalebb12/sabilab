@@ -1,9 +1,10 @@
-"""Gemini API client wrapper for structured JSON generation."""
+"""Gemini API client wrapper for structured JSON generation and token cost tracking."""
 
 import json
 import re
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 import config
+from app.cost import log_llm_cost
 
 _TEST_LLM_HANDLER = None
 
@@ -21,10 +22,20 @@ def clean_json_response(text: str) -> str:
     return cleaned.strip()
 
 
-def call_gemini_json(system_instruction: str, prompt: str) -> Dict[str, Any]:
-    """Invoke Gemini API using the official client with JSON mode and return parsed dictionary."""
+def call_gemini_json(
+    system_instruction: str,
+    prompt: str,
+    session_id: Optional[str] = None,
+    call_type: str = "general",
+) -> Dict[str, Any]:
+    """Invoke Gemini API or test handler, log token usage and cost, and return parsed JSON."""
     if _TEST_LLM_HANDLER:
-        return _TEST_LLM_HANDLER(system_instruction, prompt)
+        result = _TEST_LLM_HANDLER(system_instruction, prompt)
+        if session_id:
+            in_tok = max(1, len(system_instruction + prompt) // 4)
+            out_tok = max(1, len(json.dumps(result)) // 4)
+            log_llm_cost(session_id, call_type, in_tok, out_tok, config.GEMINI_MODEL)
+        return result
 
     if not config.GEMINI_API_KEY:
         raise ValueError("GEMINI_API_KEY is not configured in .env.")
@@ -43,4 +54,11 @@ def call_gemini_json(system_instruction: str, prompt: str) -> Dict[str, Any]:
         ),
     )
     raw_text = clean_json_response(response.text or "{}")
+
+    if session_id:
+        usage = getattr(response, "usage_metadata", None)
+        in_tok = getattr(usage, "prompt_token_count", None) or max(1, len(system_instruction + prompt) // 4)
+        out_tok = getattr(usage, "candidates_token_count", None) or max(1, len(raw_text) // 4)
+        log_llm_cost(session_id, call_type, in_tok, out_tok, config.GEMINI_MODEL)
+
     return json.loads(raw_text)

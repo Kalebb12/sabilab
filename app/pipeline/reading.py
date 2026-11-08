@@ -34,7 +34,7 @@ Analyze each message where sender is 'Student'. Return JSON matching schema."""
 def execute_reading_pass(session_id: str, transcript: List[Dict[str, Any]], scenario: Dict[str, Any]) -> Dict[str, Any]:
     """Execute reading pass via LLM and save results in readings table."""
     user_prompt = build_reading_prompt(transcript, scenario)
-    result = call_gemini_json(READING_SYSTEM_PROMPT, user_prompt)
+    result = call_gemini_json(READING_SYSTEM_PROMPT, user_prompt, session_id=session_id, call_type="reading")
 
     # Persist readings into database
     conn = get_connection()

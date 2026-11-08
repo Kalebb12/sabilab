@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SabiLab - Business Simulation</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f8fafc; color: #0f172a; padding: 1rem; line-height: 1.4; }
+    .container { max-width: 520px; margin: 0 auto; background: #fff; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.06); padding: 1.25rem; }
+    h1 { font-size: 1.35rem; color: #0f172a; margin-bottom: 0.5rem; }
+    h2 { font-size: 1.1rem; color: #1e293b; margin: 1rem 0 0.5rem; }
+    p { font-size: 0.9rem; color: #475569; margin-bottom: 0.75rem; }
+    input, textarea, button, select { width: 100%; padding: 0.65rem; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; margin-bottom: 0.75rem; }
+    button { background: #0284c7; color: white; border: none; font-weight: 600; cursor: pointer; }
+    button:hover { background: #0369a1; }
+    .box { background: #f1f5f9; padding: 0.85rem; border-radius: 8px; margin-bottom: 0.75rem; font-size: 0.85rem; }
+    .chat-box { max-height: 260px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 8px; padding: 0.75rem; background: #fafafa; margin-bottom: 0.75rem; }
+    .msg { margin-bottom: 0.5rem; padding: 0.4rem 0.6rem; border-radius: 6px; font-size: 0.85rem; }
+    .msg-ai { background: #e0f2fe; color: #0369a1; }
+    .msg-student { background: #dcfce7; color: #15803d; text-align: right; }
+    .msg-twist { background: #fee2e2; color: #b91c1c; font-weight: 600; border-left: 3px solid #ef4444; }
+    .status-tag { font-size: 0.75rem; color: #64748b; font-style: italic; margin-bottom: 0.5rem; }
+    .badge { display: inline-block; padding: 2px 8px; background: #e0f2fe; color: #0284c7; border-radius: 12px; font-size: 0.75rem; font-weight: 600; }
+  </style>
+</head>
+<body>
+<div class="container" id="app">
+  <h1>SabiLab Business Simulation</h1>
+  <p>AI-evaluated workplace simulator for real Nigerian SME problems.</p>
+
+  <!-- Step 1: Start Session -->
+  <div id="step-lobby">
+    <div class="box">
+      <strong>Adaeze's Fabrics (Accountant)</strong>
+      <p style="margin-top:4px;">Cash vs customer discount crisis. 90-second demo huddle.</p>
+    </div>
+    <label><input type="checkbox" id="consent-check" style="width:auto;"> I consent to performance evaluation for research/assessment.</label>
+    <input type="text" id="student-name" placeholder="Your first name" value="Student">
+    <button id="btn-start" onclick="startSession()">Start Simulation</button>
+  </div>
+
+  <!-- Step 2: Huddle Chat -->
+  <div id="step-huddle" style="display:none;">
+    <h2>Huddle Chat</h2>
+    <div class="box" id="brief-box"></div>
+    <div class="chat-box" id="chat-messages"></div>
+    <div id="twist-banner" style="display:none;" class="msg msg-twist"></div>
+    <input type="text" id="chat-input" placeholder="Type message (max 500 chars)..." maxlength="500">
+    <button onclick="sendChatMessage()">Send</button>
+    <button onclick="goToTask()" style="background:#475569;">Proceed to Task Recommendation</button>
+  </div>
+
+  <!-- Step 3: Task Submission with Local Autosave & Resume -->
+  <div id="step-task" style="display:none;">
+    <h2>Individual Recommendation</h2>
+    <p>Write your recommendation to Adaeze in 2 to 4 sentences: what you do about the discount and Kano invoice, with numbers, and why.</p>
+    <div class="status-tag" id="autosave-status">Draft autosaves locally every 3s</div>
+    <textarea id="task-textarea" rows="4" placeholder="Enter recommendation..."></textarea>
+    <button onclick="submitStudentTask()">Submit Recommendation</button>
+  </div>
+
+  <!-- Step 4: Results & Evidence Card -->
+  <div id="step-results" style="display:none;">
+    <h2>Simulation Results</h2>
+    <div id="results-content"></div>
+    <div id="card-link-box"></div>
+  </div>
+</div>
+
+<script>
+let currentSessionId = localStorage.getItem("sabilab_current_session") || null;
+let currentUserId = localStorage.getItem("sabilab_user_id") || null;
+let autosaveTimer = null;
+
+function updateStatus(msg) {
+  const el = document.getElementById("autosave-status");
+  if (el) el.innerText = msg;
+}
+
+// Autosave draft locally every 3 seconds
+function initAutosave() {
+  if (autosaveTimer) clearInterval(autosaveTimer);
+  const draftKey = `sabilab_draft_${currentSessionId}`;
+  
+  // Resume after refresh
+  const saved = localStorage.getItem(draftKey);
+  const tarea = document.getElementById("task-textarea");
+  if (saved && tarea && !tarea.value) {
+    tarea.value = saved;
+    updateStatus("Resumed saved draft from local storage.");
+  }
+
+  autosaveTimer = setInterval(async () => {
+    const text = document.getElementById("task-textarea")?.value || "";
+    if (currentSessionId && text) {
+      localStorage.setItem(draftKey, text);
+      updateStatus("Draft autosaved locally at " + new Date().toLocaleTimeString());
+      try {
+        await fetch(`/session/${currentSessionId}/draft`, {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({text: text})
+        });
+      } catch (e) {}
+    }
+  }, 3000);
+}
+
+async function startSession() {
+  const consent = document.getElementById("consent-check").checked;
+  const name = document.getElementById("student-name").value || "Student";
+  if (!consent) { alert("Please accept the consent terms."); return; }
+
+  const res = await fetch("/session", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({first_name: name, consent: true, mode: "demo", user_id: currentUserId})
+  });
+  const data = await res.json();
+  if (data.session_id) {
+    currentSessionId = data.session_id;
+    currentUserId = data.user_id;
+    localStorage.setItem("sabilab_current_session", currentSessionId);
+    localStorage.setItem("sabilab_user_id", currentUserId);
+
+    document.getElementById("step-lobby").style.display = "none";
+    document.getElementById("step-huddle").style.display = "block";
+    document.getElementById("brief-box").innerText = data.private_brief;
+    loadMessages();
+  }
+}
+
+async function loadMessages() {
+  if (!currentSessionId) return;
+  const res = await fetch(`/session/${currentSessionId}/messages`);
+  const msgs = await res.json();
+  const box = document.getElementById("chat-messages");
+  box.innerHTML = msgs.map(m => {
+    let cls = m.sender === "Student" ? "msg-student" : (m.sender === "Adaeze" && m.phase === "twist" ? "msg-twist" : "msg-ai");
+    return `<div class="msg ${cls}"><strong>${m.sender}:</strong> ${m.text}</div>`;
+  }).join("");
+  box.scrollTop = box.scrollHeight;
+}
+
+async function sendChatMessage() {
+  const input = document.getElementById("chat-input");
+  const text = input.value.trim();
+  if (!text) return;
+  if (text.length > 500) { alert("Message exceeds 500 character limit."); return; }
+
+  const res = await fetch(`/session/${currentSessionId}/message`, {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({sender: "Student", text: text})
+  });
+  if (res.status === 429) {
+    alert("Please wait a moment before sending another message (rate limit).");
+    return;
+  }
+  input.value = "";
+  loadMessages();
+}
+
+function goToTask() {
+  document.getElementById("step-huddle").style.display = "none";
+  document.getElementById("step-task").style.display = "block";
+  initAutosave();
+}
+
+async function submitStudentTask() {
+  const text = document.getElementById("task-textarea").value.trim();
+  if (!text) { alert("Please enter your recommendation."); return; }
+  updateStatus("Submitting...");
+
+  await fetch("/task", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({session_id: currentSessionId, text: text, user_id: currentUserId})
+  });
+
+  // Clear autosaved draft on submission
+  localStorage.removeItem(`sabilab_draft_${currentSessionId}`);
+  if (autosaveTimer) clearInterval(autosaveTimer);
+
+  // Trigger score pipeline
+  updateStatus("Scoring with AI evaluation pipeline...");
+  const scoreRes = await fetch(`/session/${currentSessionId}/score`, {method: "POST"});
+  const scoreData = await scoreRes.json();
+
+  if (scoreData.status === "awaiting_clarification") {
+    const q = scoreData.clarifications[0];
+    const ans = prompt("Clarification needed: " + q.question);
+    await fetch(`/session/${currentSessionId}/clarify`, {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({message_id: q.message_id, answer: ans || "Clarified"})
+    });
+  }
+
+  showResults();
+}
+
+async function showResults() {
+  document.getElementById("step-task").style.display = "none";
+  document.getElementById("step-results").style.display = "block";
+
+  const res = await fetch(`/session/${currentSessionId}/results`);
+  const data = await res.json();
+  const c = document.getElementById("results-content");
+  c.innerHTML = `
+    <div class="box">
+      <strong>Badge:</strong> ${data.badge ? data.badge.name + ' (' + data.badge.level + ')' : 'No badge yet'}<br>
+      <strong>Routing:</strong> ${data.routing}
+    </div>
+    <div class="box">
+      <strong>Scores:</strong><br>
+      ${(data.scores || []).map(s => `• ${s.criterion}: <em>${s.level}</em> (Quote: "${s.evidence}")`).join("<br>")}
+    </div>`;
+
+  const cardRes = await fetch(`/session/${currentSessionId}/card`, {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({})
+  });
+  const cardData = await cardRes.json();
+  if (cardData.slug) {
+    document.getElementById("card-link-box").innerHTML = `
+      <p style="margin-top:1rem;"><a href="/card/${cardData.slug}" target="_blank" style="color:#0284c7;font-weight:bold;">View Public Evidence Card →</a></p>`;
+  }
+}
+
+// Check if resuming an existing session
+if (currentSessionId && localStorage.getItem(`sabilab_draft_${currentSessionId}`)) {
+  document.getElementById("step-lobby").style.display = "none";
+  document.getElementById("step-task").style.display = "block";
+  initAutosave();
+}
+</script>
+</body>
+</html>

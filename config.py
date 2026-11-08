@@ -28,6 +28,14 @@ RUBRIC_VERSION = "v0.2"
 # Reviewer password (server-side only, never sent to browser)
 REVIEW_PASSWORD = os.getenv("REVIEW_PASSWORD", "")
 
+# Message constraints and rate limit
+MESSAGE_MAX_CHARS = 500
+MESSAGE_RATE_LIMIT_SECONDS = 1.0
+
+# Gemini 2.5 Flash token pricing per 1M tokens (USD)
+INPUT_TOKEN_PRICE_PER_M = 0.15
+OUTPUT_TOKEN_PRICE_PER_M = 0.60
+
 # Session timing (in seconds)
 TIMING_REAL = {
     "brief": 180,

@@ -3,6 +3,7 @@
 import uuid
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
+import config
 from db import get_connection
 from app.loader import load_scenario
 from app.twist import check_and_fire_twist, is_twist_fired
@@ -10,6 +11,11 @@ from app.twist import check_and_fire_twist, is_twist_fired
 
 def post_message(session_id: str, sender: str, text: str, current_time: Optional[datetime] = None) -> List[Dict[str, Any]]:
     """Save user message, check twist, and generate scripted teammate replies."""
+    if len(text.strip()) == 0:
+        raise ValueError("Message cannot be empty.")
+    if len(text) > config.MESSAGE_MAX_CHARS:
+        raise ValueError(f"Message exceeds maximum length of {config.MESSAGE_MAX_CHARS} characters.")
+
     now = current_time or datetime.now(timezone.utc)
     new_messages = []
 
@@ -22,6 +28,17 @@ def post_message(session_id: str, sender: str, text: str, current_time: Optional
         sess = conn.execute("SELECT scenario_id FROM sessions WHERE id = ?", (session_id,)).fetchone()
         if not sess:
             raise ValueError(f"Session '{session_id}' not found.")
+
+        # Rate limit check per session (excluding initial opening messages)
+        last_msg = conn.execute(
+            "SELECT sent_time FROM messages WHERE session_id = ? AND sender = ? AND sequence_number > 3 ORDER BY sequence_number DESC LIMIT 1",
+            (session_id, sender),
+        ).fetchone()
+        if last_msg:
+            last_dt = datetime.fromisoformat(last_msg["sent_time"])
+            if (now - last_dt).total_seconds() < config.MESSAGE_RATE_LIMIT_SECONDS:
+                raise ValueError("Rate limit exceeded: please wait a moment before sending another message.")
+
         scenario = load_scenario(sess["scenario_id"])
         participants = conn.execute("SELECT display_name FROM participants WHERE session_id = ? AND kind = 'ai'", (session_id,)).fetchall()
         max_seq = conn.execute("SELECT COALESCE(MAX(sequence_number), 0) FROM messages WHERE session_id = ?", (session_id,)).fetchone()[0]
