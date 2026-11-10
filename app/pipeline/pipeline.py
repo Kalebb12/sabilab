@@ -3,12 +3,18 @@
 import logging
 from typing import Any, Dict
 from db import get_connection
+from app.cost import get_cost_summary
 from app.loader import load_scenario
 from app.pipeline.prepare import prepare_transcript
 from app.pipeline.reading import execute_reading_pass
 from app.pipeline.gate import evaluate_gate, get_clarifications
 from app.pipeline.scoring import execute_scoring_pass
-from app.pipeline.telemetry import run_stage, set_pipeline_status
+from app.pipeline.telemetry import (
+    get_pipeline_status,
+    run_stage,
+    set_pipeline_status,
+    try_start_pipeline,
+)
 from checks import report_checks
 
 logger = logging.getLogger("sabilab.pipeline")
@@ -16,6 +22,9 @@ logger = logging.getLogger("sabilab.pipeline")
 
 def run_pipeline(session_id: str) -> Dict[str, Any]:
     """Execute the assessment pipeline: prepare, reading, clarification gate, and scoring."""
+    if not try_start_pipeline(session_id):
+        status = get_pipeline_status(session_id) or {"status": "running"}
+        return {"session_id": session_id, **status}
     try:
         def prepare():
             conn = get_connection()
@@ -96,3 +105,18 @@ def run_pipeline(session_id: str) -> Dict[str, Any]:
         except Exception:
             logger.exception("[%s] Failed to save pipeline failure status", session_id)
         raise
+    finally:
+        try:
+            usage = get_cost_summary(session_id)
+            logger.info(
+                "[%s] LLM session usage calls=%d input_tokens=%d output_tokens=%d "
+                "total_tokens=%d cost_usd=%.6f",
+                session_id,
+                usage["total_calls"],
+                usage["total_input_tokens"],
+                usage["total_output_tokens"],
+                usage["total_input_tokens"] + usage["total_output_tokens"],
+                usage["total_cost_usd"],
+            )
+        except Exception:
+            logger.exception("[%s] Could not log session LLM usage", session_id)

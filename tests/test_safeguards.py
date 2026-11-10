@@ -1,6 +1,7 @@
 """Tests for message length limits, rate limits, draft persistence, and cost tracking."""
 
 from datetime import datetime, timezone, timedelta
+from types import SimpleNamespace
 import pytest
 from fastapi.testclient import TestClient
 import config
@@ -80,8 +81,10 @@ def test_cost_logging_summary_per_session():
     sid = sess["session_id"]
 
     # Log 2 mock LLM calls
-    log_llm_cost(sid, "reading", input_tokens=1000, output_tokens=200)
-    log_llm_cost(sid, "scoring", input_tokens=2000, output_tokens=400)
+    response = SimpleNamespace(usage=SimpleNamespace(prompt_tokens=1000, completion_tokens=200))
+    priced_model = next(iter(config.LLM_MODEL_PRICES_PER_M))
+    log_llm_cost(sid, "reading", model=priced_model, response=response)
+    log_llm_cost(sid, "scoring", input_tokens=2000, output_tokens=400, model=priced_model)
 
     res = client.get(f"/session/{sid}/cost")
     assert res.status_code == 200

@@ -10,15 +10,21 @@ from db import get_connection
 def log_llm_cost(
     session_id: str,
     call_type: str,
-    input_tokens: int,
-    output_tokens: int,
-    model: str = config.GEMINI_MODEL,
+    input_tokens: int = 0,
+    output_tokens: int = 0,
+    model: str = config.LLM_MODEL,
     current_time: Optional[datetime] = None,
+    response: Any = None,
 ) -> float:
     """Calculate and log LLM usage event for a session into the events table."""
+    usage = getattr(response, "usage", None)
+    if usage is not None:
+        input_tokens = getattr(usage, "prompt_tokens", 0) or 0
+        output_tokens = getattr(usage, "completion_tokens", 0) or 0
     now = current_time or datetime.now(timezone.utc)
-    in_cost = (input_tokens / 1_000_000.0) * config.INPUT_TOKEN_PRICE_PER_M
-    out_cost = (output_tokens / 1_000_000.0) * config.OUTPUT_TOKEN_PRICE_PER_M
+    input_price, output_price = config.LLM_MODEL_PRICES_PER_M.get(model, (0.0, 0.0))
+    in_cost = (input_tokens / 1_000_000.0) * input_price
+    out_cost = (output_tokens / 1_000_000.0) * output_price
     cost_usd = round(in_cost + out_cost, 6)
 
     details = json.dumps({
@@ -63,7 +69,7 @@ def get_cost_summary(session_id: str) -> Dict[str, Any]:
         calls.append({
             "time": r["time"],
             "call_type": d.get("call_type", "unknown"),
-            "model": d.get("model", config.GEMINI_MODEL),
+            "model": d.get("model", config.LLM_MODEL),
             "input_tokens": d.get("input_tokens", 0),
             "output_tokens": d.get("output_tokens", 0),
             "cost_usd": d.get("cost_usd", 0.0),

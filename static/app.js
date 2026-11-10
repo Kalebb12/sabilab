@@ -4,7 +4,7 @@ let state = {
   sessionId: localStorage.getItem("sabi_session_id") || null,
   userId: localStorage.getItem("sabi_user_id") || null,
   studentName: localStorage.getItem("sabi_student_name") || "Student",
-  role: "", brief: "", roster: [],
+  role: "", brief: "", roster: [], scenarioId: "adaeze",
   huddleRemaining: 90,
   timerInterval: null, pollInterval: null, autosaveInterval: null,
 };
@@ -13,12 +13,11 @@ function showScreen(id) {
   document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
   const target = document.getElementById(id);
   if (target) target.classList.add("active");
+  document.querySelectorAll(".nav-item").forEach(item => {
+    if (id === "screen-landing") item.setAttribute("aria-current", "page");
+    else item.removeAttribute("aria-current");
+  });
   window.scrollTo(0, 0);
-}
-
-function selectScenario(scenarioId) {
-  if (scenarioId !== "adaeze") return;
-  showScreen("screen-consent");
 }
 
 async function onStartSession() {
@@ -28,7 +27,7 @@ async function onStartSession() {
   if (nameInput) state.studentName = nameInput;
 
   try {
-    const data = await API.startSession(state.studentName, true, state.userId);
+    const data = await API.startSession(state.studentName, true, state.userId, state.scenarioId);
     state.sessionId = data.session_id;
     state.userId = data.user_id;
     state.role = data.student_role;

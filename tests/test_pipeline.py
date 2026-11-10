@@ -88,7 +88,7 @@ def test_full_session_produces_verified_scores():
         if "Reading pass" in system_instruction:
             return {
                 "readings": [
-                    {"message_id": "M3", "language": "en", "intent": "Inquiring about cash", "clarity": "clear", "tone": "neutral", "tone_flags": [], "register_fit": "fits"},
+                    {"message_id": "M3", "language": "en", "intent": "Inquiring about cash", "clarity": "clear", "ambiguity": ["cash balance"], "tone": "neutral", "tone_flags": [], "register_fit": None},
                     {"message_id": "M4", "language": "en", "intent": "Recommending payment", "clarity": "clear", "tone": "positive", "tone_flags": [], "register_fit": "fits"},
                 ],
                 "clarification_requests": [],
@@ -133,10 +133,13 @@ def test_full_session_produces_verified_scores():
     assert len(score_rows) == 1
     assert score_rows[0]["criterion"] == "A1 Accuracy"
     assert score_rows[0]["level"] == "Proficient"
-    assert config.GEMINI_MODEL in score_rows[0]["model_and_version"]
+    assert config.LLM_MODEL_SCORING in score_rows[0]["model_and_version"]
     assert score_rows[0]["prompt_version"] == "v0.2"
 
     result_row = conn.execute("SELECT routing, did_well, improve FROM results WHERE session_id = ?", (sid,)).fetchone()
     assert result_row is not None
     assert result_row["routing"] == "AI-assessed"
+    reading_row = conn.execute("SELECT register_fit, ambiguity FROM readings WHERE session_id = ? LIMIT 1", (sid,)).fetchone()
+    assert reading_row["register_fit"] == "fit"
+    assert reading_row["ambiguity"] == "cash balance"
     conn.close()

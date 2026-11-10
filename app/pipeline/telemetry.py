@@ -61,6 +61,26 @@ def get_pipeline_status(session_id: str) -> Optional[Dict[str, Any]]:
         conn.close()
 
 
+def try_start_pipeline(session_id: str) -> bool:
+    """Atomically mark a session running unless another pipeline owns it."""
+    conn = get_connection()
+    try:
+        cursor = conn.execute(
+            """INSERT INTO pipeline_status
+               (session_id, status, current_stage, error_message, updated_at)
+               VALUES (?, 'running', 'prepare', NULL, ?)
+               ON CONFLICT(session_id) DO UPDATE SET
+                 status = 'running', current_stage = 'prepare',
+                 error_message = NULL, updated_at = excluded.updated_at
+               WHERE pipeline_status.status != 'running'""",
+            (session_id, datetime.now(timezone.utc).isoformat()),
+        )
+        conn.commit()
+        return cursor.rowcount == 1
+    finally:
+        conn.close()
+
+
 def run_stage(session_id: str, stage: str, operation: Callable[[], T]) -> T:
     """Run one pipeline stage while logging its duration and any traceback."""
     started = time.monotonic()

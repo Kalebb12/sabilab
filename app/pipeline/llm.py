@@ -1,15 +1,19 @@
-"""Gemini API client wrapper for structured JSON generation and token cost tracking."""
+"""OpenAI-compatible client wrapper for JSON generation and token tracking."""
 
 import json
 import logging
 import re
+import time
+from threading import Lock
 from typing import Any, Dict, Optional
+from urllib.parse import urlparse
 import config
 from app.cost import log_llm_cost
 
 _TEST_LLM_HANDLER = None
+_LLM_LOCK = Lock()
 logger = logging.getLogger("sabilab.pipeline.llm")
-LLM_TIMEOUT_MS = 30_000
+LLM_TIMEOUT_SECONDS = 30
 
 
 def set_test_llm_handler(handler) -> None:
@@ -25,81 +29,161 @@ def clean_json_response(text: str) -> str:
     return cleaned.strip()
 
 
-def call_gemini_json(
+def _rate_limit_delay(exc: Exception) -> float:
+    response = getattr(exc, "response", None)
+    headers = getattr(response, "headers", {}) or {}
+    retry_after = headers.get("retry-after")
+    if retry_after is None:
+        match = re.search(r"try again in\s+([0-9.]+)s", str(exc), re.IGNORECASE)
+        retry_after = match.group(1) if match else None
+    try:
+        return float(retry_after) + 1.0 if retry_after else 2.0
+    except (TypeError, ValueError):
+        return 2.0
+
+
+def _call_settings(call_type: str) -> tuple[str, Optional[int], Optional[str]]:
+    if call_type == "reading":
+        return config.LLM_MODEL_FAST, 800, "low"
+    if call_type == "persona":
+        return config.LLM_MODEL_FAST, 150, None
+    if call_type.startswith("scoring"):
+        return config.LLM_MODEL_SCORING, 1500, "low"
+    return config.LLM_MODEL, None, None
+
+
+def _create_completion(
+    client: Any,
+    messages: list[dict[str, str]],
+    model: str,
+    max_tokens: Optional[int],
+    reasoning_effort: Optional[str],
+    provider: str,
+) -> tuple[Any, float]:
+    started = time.monotonic()
+    options = {"model": model, "messages": messages, "response_format": {"type": "json_object"}, "temperature": 0.1}
+    if max_tokens is not None:
+        options["max_tokens"] = max_tokens
+    if reasoning_effort:
+        options["reasoning_effort"] = reasoning_effort
+    try:
+        response = client.chat.completions.create(**options)
+    except Exception as exc:
+        message = str(exc).lower()
+        json_mode_failure = any(term in message for term in (
+            "response_format", "json_object", "failed to generate json", "failed_generation"
+        ))
+        if str(getattr(exc, "status_code", "")) != "400" or not json_mode_failure:
+            raise
+        logger.warning("LLM provider=%s model=%s JSON mode failed; retrying without response_format",
+                       provider, model)
+        started = time.monotonic()
+        options.pop("response_format")
+        response = client.chat.completions.create(**options)
+    return response, time.monotonic() - started
+
+
+def _request_with_retries(client: Any, messages: list[dict[str, str]], model: str,
+                          max_tokens: Optional[int], effort: Optional[str], provider: str) -> Any:
+    for retry in range(3):
+        started = time.monotonic()
+        try:
+            response, elapsed = _create_completion(
+                client, messages, model, max_tokens, effort, provider
+            )
+            usage = getattr(response, "usage", None)
+            logger.info("LLM provider=%s model=%s elapsed=%.2fs prompt_tokens=%d completion_tokens=%d",
+                        provider, model, elapsed, getattr(usage, "prompt_tokens", 0) or 0,
+                        getattr(usage, "completion_tokens", 0) or 0)
+            return response
+        except Exception as exc:
+            status = getattr(exc, "status_code", None)
+            if status is None:
+                status = getattr(getattr(exc, "response", None), "status_code", None)
+            logger.info("LLM provider=%s model=%s elapsed=%.2fs prompt_tokens=0 completion_tokens=0",
+                        provider, model, time.monotonic() - started)
+            if str(status) != "429" or retry == 2:
+                raise
+            delay = _rate_limit_delay(exc)
+            logger.warning("LLM provider=%s model=%s rate limited; retry %d/2 in %.2fs",
+                           provider, model, retry + 1, delay)
+            time.sleep(delay)
+
+
+def _status_code(exc: Exception) -> Any:
+    return getattr(exc, "status_code", None) or getattr(
+        getattr(exc, "response", None), "status_code", None
+    )
+
+
+def _client(base_url: str, api_key: str) -> Any:
+    from openai import OpenAI
+    return OpenAI(api_key=api_key, base_url=base_url,
+                  timeout=LLM_TIMEOUT_SECONDS, max_retries=0)
+
+
+def _call_llm_json_unlocked(
     system_instruction: str,
     prompt: str,
     session_id: Optional[str] = None,
     call_type: str = "general",
 ) -> Dict[str, Any]:
-    """Invoke Gemini API or test handler, log token usage and cost, and return parsed JSON."""
+    """Call the configured OpenAI-compatible API and return a parsed JSON object."""
+    model, max_tokens, effort = _call_settings(call_type)
+    provider_url, api_key = config.LLM_BASE_URL, config.GROQ_API_KEY
+    provider = urlparse(provider_url).netloc or "openai-compatible"
+    prompt = prompt + "\nReturn a valid JSON object only."
     if _TEST_LLM_HANDLER:
+        started = time.monotonic()
         result = _TEST_LLM_HANDLER(system_instruction, prompt)
+        input_tokens = max(1, len(system_instruction + prompt) // 4)
+        output_tokens = max(1, len(json.dumps(result)) // 4)
+        logger.info("LLM provider=%s model=%s elapsed=%.2fs prompt_tokens=%d completion_tokens=%d", provider, model, time.monotonic() - started, input_tokens, output_tokens)
         if session_id:
-            in_tok = max(1, len(system_instruction + prompt) // 4)
-            out_tok = max(1, len(json.dumps(result)) // 4)
-            log_llm_cost(session_id, call_type, in_tok, out_tok, config.GEMINI_MODEL)
+            log_llm_cost(session_id, call_type, input_tokens, output_tokens, model)
         return result
 
-    if not config.GEMINI_API_KEY:
-        raise ValueError("GEMINI_API_KEY is not configured in .env.")
-
-    from google import genai
-    from google.genai import types
-
-    client = genai.Client(
-        api_key=config.GEMINI_API_KEY,
-        http_options=types.HttpOptions(timeout=LLM_TIMEOUT_MS),
-    )
-    generation_options: Dict[str, Any] = {
-        "system_instruction": system_instruction,
-        "response_mime_type": "application/json",
-        "temperature": 0.1,
-    }
-    thinking_config_type = getattr(types, "ThinkingConfig", None)
-    if thinking_config_type and config.GEMINI_MODEL.lower().startswith("gemini-3"):
-        thinking_level_type = getattr(types, "ThinkingLevel", None)
-        low_level = getattr(thinking_level_type, "LOW", None)
-        if low_level is not None:
-            generation_options["thinking_config"] = thinking_config_type(
-                thinking_level=low_level
+    if not api_key:
+        raise ValueError("GROQ_API_KEY is not configured in the environment.")
+    client = _client(provider_url, api_key)
+    fallback_configured = all((config.FALLBACK_BASE_URL, config.FALLBACK_API_KEY, config.FALLBACK_MODEL))
+    fallback_used = False
+    for parse_attempt in range(2):
+        if parse_attempt:
+            prompt += f"\nThe previous response was invalid JSON. Return a valid JSON object only.\nPrevious response:\n{raw_text}"
+        messages = [{"role": "system", "content": system_instruction},
+                    {"role": "user", "content": prompt}]
+        try:
+            response = _request_with_retries(client, messages, model, max_tokens, effort, provider)
+        except Exception as exc:
+            if str(_status_code(exc)) != "429" or not fallback_configured or fallback_used:
+                raise
+            provider_url, api_key, model = (
+                config.FALLBACK_BASE_URL, config.FALLBACK_API_KEY, config.FALLBACK_MODEL
             )
-    elif thinking_config_type and config.GEMINI_MODEL.lower().startswith("gemini-2.5"):
-        generation_options["thinking_config"] = thinking_config_type(thinking_budget=0)
+            provider = urlparse(provider_url).netloc or "fallback"
+            client = _client(provider_url, api_key)
+            fallback_used = True
+            logger.warning("LLM rate limit retries exhausted; switching to fallback provider=%s model=%s",
+                           provider, model)
+            response = _request_with_retries(client, messages, model, max_tokens, effort, provider)
+        if session_id:
+            log_llm_cost(session_id, call_type, model=model, response=response)
+        raw_text = clean_json_response(response.choices[0].message.content or "")
+        try:
+            return json.loads(raw_text)
+        except json.JSONDecodeError as exc:
+            if parse_attempt:
+                raise ValueError("LLM returned invalid JSON after one retry.") from exc
+    raise ValueError("LLM returned invalid JSON after one retry.")
 
-    try:
-        response = client.models.generate_content(
-            model=config.GEMINI_MODEL,
-            contents=prompt,
-            config=types.GenerateContentConfig(**generation_options),
-        )
-        raw_text = clean_json_response(response.text or "{}")
-        result = json.loads(raw_text)
-    except Exception as exc:
-        status = getattr(exc, "code", None)
-        if status is None:
-            status = getattr(getattr(exc, "response", None), "status_code", None)
-        if str(status) == "429":
-            logger.exception("Gemini API rate limited this request (HTTP 429).")
-        elif str(status) == "503" or "UNAVAILABLE" in str(exc):
-            logger.exception(
-                "Gemini API is temporarily unavailable (HTTP 503); the model may "
-                "be experiencing high demand."
-            )
-        elif str(status) == "504" or "DEADLINE_EXCEEDED" in str(exc):
-            logger.exception(
-                "Gemini API deadline exceeded (HTTP 504); the provider did not "
-                "complete this request before its deadline."
-            )
-        elif isinstance(exc, TimeoutError) or "timeout" in type(exc).__name__.lower():
-            logger.exception("Gemini API request timed out after 30 seconds.")
-        else:
-            logger.exception("Gemini API request or response parsing failed.")
-        raise
 
-    if session_id:
-        usage = getattr(response, "usage_metadata", None)
-        in_tok = getattr(usage, "prompt_token_count", None) or max(1, len(system_instruction + prompt) // 4)
-        out_tok = getattr(usage, "candidates_token_count", None) or max(1, len(raw_text) // 4)
-        log_llm_cost(session_id, call_type, in_tok, out_tok, config.GEMINI_MODEL)
-
-    return result
+def call_llm_json(
+    system_instruction: str,
+    prompt: str,
+    session_id: Optional[str] = None,
+    call_type: str = "general",
+) -> Dict[str, Any]:
+    """Serialize LLM calls across this process and return parsed JSON."""
+    with _LLM_LOCK:
+        return _call_llm_json_unlocked(system_instruction, prompt, session_id, call_type)

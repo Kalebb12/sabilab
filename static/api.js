@@ -3,17 +3,18 @@
 const API = {
   async getScenarios() {
     const res = await fetch("/scenarios");
+    if (!res.ok) throw new Error("Failed to load scenarios.");
     return res.json();
   },
 
-  async startSession(firstName, consent, userId = null) {
+  async startSession(firstName, consent, userId = null, scenarioId = "adaeze") {
     const res = await fetch("/session", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         first_name: firstName || "Student",
         consent: Boolean(consent),
-        scenario_id: "adaeze",
+        scenario_id: scenarioId,
         mode: "demo",
         user_id: userId || undefined,
       }),

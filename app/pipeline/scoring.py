@@ -6,7 +6,7 @@ import time
 from typing import Any, Dict, List
 import config
 from db import get_connection
-from app.pipeline.llm import call_gemini_json
+from app.pipeline.llm import call_llm_json
 from app.pipeline.prompts import SCORING_SYSTEM_PROMPT
 from app.pipeline.telemetry import run_stage
 from app.pipeline.verification import verify_scoring_output
@@ -38,7 +38,7 @@ def execute_scoring_pass(session_id: str, transcript: List[Dict[str, Any]], stud
     t_llm = time.time()
     logger.info(f"[{session_id}] [llm_scoring] start")
     try:
-        result = call_gemini_json(SCORING_SYSTEM_PROMPT, prompt, session_id=session_id, call_type="scoring")
+        result = call_llm_json(SCORING_SYSTEM_PROMPT, prompt, session_id=session_id, call_type="scoring")
         logger.info(f"[{session_id}] [llm_scoring] done in {time.time() - t_llm:.2f}s")
     except Exception:
         logger.exception(f"[{session_id}] [llm_scoring] call failed after {time.time() - t_llm:.2f}s")
@@ -55,7 +55,7 @@ def execute_scoring_pass(session_id: str, transcript: List[Dict[str, Any]], stud
         logger.info(f"[{session_id}] [scoring_retry] start")
         retry_prompt = prompt + f"\nPrevious output failed verification with errors: {errors}. You must use exact quotes from the student. Try again."
         try:
-            result = call_gemini_json(SCORING_SYSTEM_PROMPT, retry_prompt, session_id=session_id, call_type="scoring_retry")
+            result = call_llm_json(SCORING_SYSTEM_PROMPT, retry_prompt, session_id=session_id, call_type="scoring_retry")
             logger.info(f"[{session_id}] [scoring_retry] done in {time.time() - t_r:.2f}s")
             is_valid, errors = run_stage(
                 session_id,
@@ -74,7 +74,7 @@ def execute_scoring_pass(session_id: str, transcript: List[Dict[str, Any]], stud
     # Persist scores in database
     conn = get_connection()
     try:
-        model_version = f"{config.GEMINI_MODEL}:{config.PROMPT_VERSION_SCORING}"
+        model_version = f"{config.LLM_MODEL_SCORING}:{config.PROMPT_VERSION_SCORING}"
         for s in result.get("scores", []):
             conn.execute(
                 "INSERT INTO scores (session_id, dimension, criterion, level, confidence, evidence, counter_evidence, reason, rubric_version, model_and_version, prompt_version) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",

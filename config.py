@@ -13,12 +13,15 @@ SCENARIOS_DIR = BASE_DIR / "scenarios"
 DB_PATH = BASE_DIR / "sabilab.db"
 STATIC_DIR = BASE_DIR / "static"
 
-# Gemini API settings
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
-GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.5-flash")
-GEMINI_MODEL_PERSONA = GEMINI_MODEL
-GEMINI_MODEL_SCORING = GEMINI_MODEL
-GEMINI_API_BASE_URL = os.getenv("GEMINI_API_BASE_URL", "")
+# OpenAI-compatible LLM settings
+LLM_BASE_URL = os.getenv("LLM_BASE_URL", "https://api.groq.com/openai/v1")
+LLM_MODEL = os.getenv("LLM_MODEL", "openai/gpt-oss-120b")
+LLM_MODEL_FAST = os.getenv("LLM_MODEL_FAST", LLM_MODEL)
+LLM_MODEL_SCORING = os.getenv("LLM_MODEL_SCORING", LLM_MODEL)
+GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
+FALLBACK_BASE_URL = os.getenv("FALLBACK_BASE_URL", "")
+FALLBACK_API_KEY = os.getenv("FALLBACK_API_KEY", "")
+FALLBACK_MODEL = os.getenv("FALLBACK_MODEL", "")
 
 # Prompt versions
 PROMPT_VERSION_READING = "v0.2"
@@ -32,9 +35,10 @@ REVIEW_PASSWORD = os.getenv("REVIEW_PASSWORD", "")
 MESSAGE_MAX_CHARS = 500
 MESSAGE_RATE_LIMIT_SECONDS = 1.0
 
-# Gemini 2.5 Flash token pricing per 1M tokens (USD)
-INPUT_TOKEN_PRICE_PER_M = 0.15
-OUTPUT_TOKEN_PRICE_PER_M = 0.60
+# USD per million tokens; unknown models are treated as free/undetermined.
+LLM_MODEL_PRICES_PER_M = {
+    "llama-3.3-70b-versatile": (0.59, 0.79),
+}
 
 # Session timing (in seconds)
 TIMING_REAL = {

@@ -1,0 +1,190 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" width="1200" height="800" xmlns:c2pa="http://c2pa.org/manifest">
+  <defs>
+    <linearGradient id="wall" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1F5A63"/>
+      <stop offset="1" stop-color="#2B7580"/>
+    </linearGradient>
+    <linearGradient id="floor" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#B9773F"/>
+      <stop offset="1" stop-color="#8E5529"/>
+    </linearGradient>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFD58A"/>
+      <stop offset="1" stop-color="#FFA66B"/>
+    </linearGradient>
+    <linearGradient id="beam" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FFE3A8" stop-opacity=".35"/>
+      <stop offset="1" stop-color="#FFE3A8" stop-opacity="0"/>
+    </linearGradient>
+    <pattern id="dots" width="16" height="16" patternUnits="userSpaceOnUse">
+      <rect width="16" height="16" fill="#1B4FB5"/>
+      <circle cx="8" cy="8" r="3.2" fill="#F6F1E4"/>
+      <circle cx="0" cy="0" r="2" fill="#F5A524"/><circle cx="16" cy="16" r="2" fill="#F5A524"/>
+    </pattern>
+    <pattern id="zig" width="24" height="16" patternUnits="userSpaceOnUse">
+      <rect width="24" height="16" fill="#F5A524"/>
+      <path d="M0 12 L6 4 L12 12 L18 4 L24 12" stroke="#7A2E0E" stroke-width="3" fill="none"/>
+    </pattern>
+    <pattern id="stripe" width="14" height="14" patternUnits="userSpaceOnUse">
+      <rect width="14" height="14" fill="#D6336C"/>
+      <rect x="0" y="0" width="5" height="14" fill="#F8D1E0"/>
+    </pattern>
+    <pattern id="leaf" width="20" height="20" patternUnits="userSpaceOnUse">
+      <rect width="20" height="20" fill="#1E8C5A"/>
+      <ellipse cx="10" cy="10" rx="3" ry="7" fill="#B8F0CF" transform="rotate(35 10 10)"/>
+    </pattern>
+    <pattern id="plank" width="120" height="46" patternUnits="userSpaceOnUse">
+      <path d="M0 45 H120" stroke="#6E3F1C" stroke-width="2" opacity=".5"/>
+      <path d="M60 0 V45" stroke="#6E3F1C" stroke-width="2" opacity=".35"/>
+    </pattern>
+    <clipPath id="winclip"><rect x="860" y="150" width="260" height="250" rx="10"/></clipPath>
+  </defs>
+
+  <!-- wall and floor -->
+  <rect width="1200" height="800" fill="url(#wall)"/>
+  <rect y="560" width="1200" height="240" fill="url(#floor)"/>
+  <rect y="560" width="1200" height="240" fill="url(#plank)"/>
+  <rect y="548" width="1200" height="14" fill="#143F47"/>
+
+  <!-- sign -->
+  <rect x="60" y="34" width="440" height="78" rx="14" fill="#FFF3D6"/>
+  <rect x="68" y="42" width="424" height="62" rx="10" fill="none" stroke="#C0692B" stroke-width="3"/>
+  <text x="280" y="86" text-anchor="middle" font-family="Poppins, sans-serif" font-weight="700" font-size="34" fill="#7A2E0E">Adaeze's Fabrics</text>
+  <path d="M130 34 V10 M430 34 V10" stroke="#143F47" stroke-width="4"/>
+
+  <!-- window with city silhouette -->
+  <g>
+    <rect x="850" y="140" width="280" height="270" rx="14" fill="#143F47"/>
+    <g clip-path="url(#winclip)">
+      <rect x="860" y="150" width="260" height="250" fill="url(#sky)"/>
+      <circle cx="1040" cy="215" r="34" fill="#FFF0BF" opacity=".9"/>
+      <path d="M860 400 V320 H895 V290 H925 V335 H960 V270 H1000 V330 H1040 V300 H1075 V340 H1120 V400Z" fill="#7A4B5A"/>
+      <path d="M860 400 V350 H890 V330 H930 V360 H985 V335 H1025 V365 H1070 V345 H1120 V400Z" fill="#4A2E48"/>
+    </g>
+    <path d="M990 150 V400 M860 275 H1120" stroke="#143F47" stroke-width="8"/>
+    <rect x="842" y="404" width="296" height="14" rx="6" fill="#0E2F36"/>
+  </g>
+  <polygon points="860,410 1120,410 760,640 520,640" fill="url(#beam)"/>
+
+  <!-- shelving unit -->
+  <rect x="40" y="150" width="760" height="400" rx="10" fill="#0F3B43"/>
+  <rect x="52" y="162" width="736" height="376" rx="6" fill="#154B55"/>
+  <rect x="52" y="262" width="736" height="12" fill="#C98A4B"/>
+  <rect x="52" y="378" width="736" height="12" fill="#C98A4B"/>
+  <rect x="52" y="494" width="736" height="12" fill="#C98A4B"/>
+
+  <!-- fabric rolls: each is body rect + end ellipse -->
+  <g>
+    <!-- top shelf -->
+    <rect x="80" y="196" width="130" height="66" rx="8" fill="url(#dots)"/><ellipse cx="80" cy="229" rx="12" ry="33" fill="#10346F"/>
+    <rect x="230" y="206" width="110" height="56" rx="8" fill="url(#zig)"/><ellipse cx="230" cy="234" rx="10" ry="28" fill="#B2740C"/>
+    <rect x="360" y="190" width="120" height="72" rx="8" fill="url(#stripe)"/><ellipse cx="360" cy="226" rx="12" ry="36" fill="#9E1F4B"/>
+    <rect x="500" y="204" width="130" height="58" rx="8" fill="url(#leaf)"/><ellipse cx="500" cy="233" rx="10" ry="29" fill="#10603C"/>
+    <rect x="650" y="196" width="120" height="66" rx="8" fill="url(#dots)"/><ellipse cx="650" cy="229" rx="12" ry="33" fill="#10346F"/>
+    <!-- middle shelf -->
+    <rect x="80" y="312" width="120" height="66" rx="8" fill="url(#stripe)"/><ellipse cx="80" cy="345" rx="12" ry="33" fill="#9E1F4B"/>
+    <rect x="220" y="304" width="140" height="74" rx="8" fill="url(#dots)"/><ellipse cx="220" cy="341" rx="13" ry="37" fill="#10346F"/>
+    <rect x="380" y="316" width="110" height="62" rx="8" fill="url(#zig)"/><ellipse cx="380" cy="347" rx="10" ry="31" fill="#B2740C"/>
+    <rect x="510" y="308" width="130" height="70" rx="8" fill="url(#leaf)"/><ellipse cx="510" cy="343" rx="11" ry="35" fill="#10603C"/>
+    <rect x="660" y="314" width="110" height="64" rx="8" fill="url(#stripe)"/><ellipse cx="660" cy="346" rx="10" ry="32" fill="#9E1F4B"/>
+    <!-- bottom shelf -->
+    <rect x="80" y="426" width="150" height="68" rx="8" fill="url(#leaf)"/><ellipse cx="80" cy="460" rx="12" ry="34" fill="#10603C"/>
+    <rect x="250" y="432" width="120" height="62" rx="8" fill="url(#zig)"/><ellipse cx="250" cy="463" rx="10" ry="31" fill="#B2740C"/>
+    <rect x="390" y="424" width="150" height="70" rx="8" fill="url(#dots)"/><ellipse cx="390" cy="459" rx="12" ry="35" fill="#10346F"/>
+    <rect x="560" y="430" width="110" height="64" rx="8" fill="url(#stripe)"/><ellipse cx="560" cy="462" rx="10" ry="32" fill="#9E1F4B"/>
+    <rect x="690" y="428" width="82" height="66" rx="8" fill="url(#leaf)"/><ellipse cx="690" cy="461" rx="10" ry="33" fill="#10603C"/>
+  </g>
+  <!-- highlight tag on the blue rolls -->
+  <rect x="236" y="360" width="86" height="30" rx="6" fill="#FFF3D6"/>
+  <path d="M244 375 H312" stroke="#7A2E0E" stroke-width="3" stroke-linecap="round"/>
+  <path d="M236 372 L222 372" stroke="#FFF3D6" stroke-width="3"/>
+
+  <!-- pendant lamps -->
+  <g>
+    <path d="M620 0 V70 M820 0 V80" stroke="#0E2F36" stroke-width="3"/>
+    <path d="M590 70 H650 L638 96 H602Z" fill="#F5A524"/><circle cx="620" cy="100" r="9" fill="#FFF0BF"/>
+    <path d="M790 80 H850 L838 106 H802Z" fill="#F5A524"/><circle cx="820" cy="110" r="9" fill="#FFF0BF"/>
+  </g>
+
+  <!-- Adaeze -->
+  <g>
+    <!-- body -->
+    <path d="M610 640 C610 560 650 520 710 520 C770 520 810 560 810 640Z" fill="url(#dots)"/>
+    <path d="M610 640 C610 560 650 520 710 520 C770 520 810 560 810 640" fill="none" stroke="#10346F" stroke-width="4"/>
+    <!-- neck and head -->
+    <rect x="696" y="488" width="28" height="36" rx="10" fill="#6B3A1E"/>
+    <ellipse cx="710" cy="460" rx="40" ry="46" fill="#7E4524"/>
+    <!-- gele headwrap -->
+    <path d="M668 448 C664 400 700 376 740 384 C776 392 790 420 760 442 C744 420 706 418 668 448Z" fill="#D6336C"/>
+    <path d="M690 392 C720 372 764 380 774 404" fill="none" stroke="#F8D1E0" stroke-width="5" stroke-linecap="round"/>
+    <path d="M700 388 C712 360 746 356 762 380 C748 372 722 372 700 388Z" fill="#B7174F"/>
+    <!-- face -->
+    <circle cx="694" cy="462" r="4" fill="#2B1608"/><circle cx="728" cy="462" r="4" fill="#2B1608"/>
+    <path d="M696 480 Q711 492 726 480" fill="none" stroke="#2B1608" stroke-width="4" stroke-linecap="round"/>
+    <circle cx="684" cy="476" r="6" fill="#C9694A" opacity=".5"/><circle cx="738" cy="476" r="6" fill="#C9694A" opacity=".5"/>
+    <!-- earrings -->
+    <circle cx="670" cy="482" r="5" fill="#F5A524"/><circle cx="750" cy="482" r="5" fill="#F5A524"/>
+  </g>
+
+  <!-- counter -->
+  <rect x="330" y="610" width="720" height="190" rx="8" fill="#7A2E0E"/>
+  <rect x="330" y="610" width="720" height="26" rx="8" fill="#C0692B"/>
+  <rect x="330" y="630" width="720" height="8" fill="#5A1F08"/>
+  <path d="M370 660 H1010 M370 700 H1010 M370 740 H1010" stroke="#5A1F08" stroke-width="3" opacity=".6"/>
+  <rect x="352" y="652" width="676" height="130" rx="6" fill="none" stroke="#5A1F08" stroke-width="3" opacity=".5"/>
+
+  <!-- counter items -->
+  <!-- ledger -->
+  <g>
+    <rect x="410" y="578" width="160" height="40" rx="4" fill="#F6F1E4"/>
+    <rect x="410" y="610" width="160" height="10" fill="#E4D8BB"/>
+    <path d="M490 578 V610" stroke="#B9A878" stroke-width="2"/>
+    <path d="M424 588 H476 M424 598 H466 M504 588 H556 M504 598 H546" stroke="#8A7A52" stroke-width="3" stroke-linecap="round"/>
+    <rect x="398" y="574" width="14" height="46" rx="3" fill="#143F47"/>
+  </g>
+  <!-- invoice sheet with overdue stamp mark -->
+  <g transform="rotate(-6 640 590)">
+    <rect x="600" y="556" width="90" height="62" rx="3" fill="#FFFFFF"/>
+    <path d="M610 570 H670 M610 580 H660 M610 590 H664" stroke="#B8B2A0" stroke-width="3" stroke-linecap="round"/>
+    <rect x="636" y="598" width="48" height="14" rx="3" fill="none" stroke="#D6336C" stroke-width="2.5"/>
+    <path d="M642 605 H678" stroke="#D6336C" stroke-width="2.5"/>
+  </g>
+  <!-- phone with notification -->
+  <g>
+    <rect x="880" y="548" width="58" height="72" rx="9" fill="#0E2F36"/>
+    <rect x="886" y="556" width="46" height="54" rx="5" fill="#E6F4F1"/>
+    <rect x="890" y="562" width="38" height="10" rx="4" fill="#2B7580"/>
+    <rect x="890" y="576" width="30" height="8" rx="4" fill="#9CC9C5"/>
+    <circle cx="936" cy="550" r="9" fill="#E5484D"/>
+  </g>
+  <!-- calculator -->
+  <g>
+    <rect x="960" y="560" width="60" height="58" rx="7" fill="#143F47"/>
+    <rect x="967" y="567" width="46" height="14" rx="3" fill="#BDEFD8"/>
+    <g fill="#F5A524"><circle cx="974" cy="593" r="4"/><circle cx="990" cy="593" r="4"/><circle cx="1006" cy="593" r="4"/>
+    <circle cx="974" cy="607" r="4"/><circle cx="990" cy="607" r="4"/><circle cx="1006" cy="607" r="4"/></g>
+  </g>
+  <!-- cash tray -->
+  <g>
+    <rect x="720" y="592" width="120" height="24" rx="5" fill="#0E2F36"/>
+    <rect x="730" y="578" width="100" height="20" rx="3" fill="#7BC47F"/>
+    <rect x="738" y="570" width="100" height="20" rx="3" fill="#9AD69B" transform="rotate(-4 788 580)"/>
+    <circle cx="788" cy="582" r="6" fill="#3E7B42" opacity=".6"/>
+  </g>
+
+  <!-- plant -->
+  <g>
+    <path d="M1130 790 L1140 700 H1180 L1190 790Z" fill="#C0692B"/>
+    <path d="M1160 700 C1120 650 1130 600 1150 570 C1160 620 1170 650 1160 700Z" fill="#1E8C5A"/>
+    <path d="M1160 700 C1190 640 1200 610 1190 580 C1170 620 1160 660 1160 700Z" fill="#2FA86F"/>
+    <path d="M1160 700 C1140 660 1110 650 1100 620 C1130 630 1150 660 1160 700Z" fill="#146B43"/>
+  </g>
+
+  <!-- hanging swatches by window -->
+  <g>
+    <path d="M880 110 H1100" stroke="#0E2F36" stroke-width="4"/>
+    <rect x="890" y="110" width="26" height="40" fill="url(#dots)"/><rect x="930" y="110" width="26" height="30" fill="url(#zig)"/>
+    <rect x="970" y="110" width="26" height="44" fill="url(#stripe)"/><rect x="1010" y="110" width="26" height="34" fill="url(#leaf)"/>
+    <rect x="1050" y="110" width="26" height="40" fill="url(#dots)"/>
+  </g>
+<metadata><c2pa:manifest>AAAWgmp1bWIAAAAeanVtZGMycGEAEQAQgAAAqgA4m3EDYzJwYQAAABZcanVtYgAAAEdqdW1kYzJtYQARABCAAACqADibcQN1cm46YzJwYTpmNjEwMGU2Yi1mYjBhLTQ2OWMtYjEwNi03ZGEyYzAyZjgzNDkAAAADl2p1bWIAAAApanVtZGMyYXMAEQAQgAAAqgA4m3EDYzJwYS5hc3NlcnRpb25zAAAAALxqdW1iAAAARGp1bWRjYm9yABEAEIAAAKoAOJtxE2MycGEuaW5ncmVkaWVudC52MwAAAAAYYzJzaOTxWaX6m0hu99xHynQaW9cAAABwY2JvcqNpZGM6Zm9ybWF0bWltYWdlL3N2Zyt4bWxqaW5zdGFuY2VJRHgseG1wOmlpZDo5YzVlNzhlOS0zNTRiLTRiY2EtOGZmMC00NjM1YjFiODVkOGNscmVsYXRpb25zaGlwaHBhcmVudE9mAAAB4mp1bWIAAABBanVtZGNib3IAEQAQgAAAqgA4m3ETYzJwYS5hY3Rpb25zLnYyAAAAABhjMnNofZo8Tbz6cba+jl5nb4JvAAAAAZljYm9yomdhY3Rpb25zgqJmYWN0aW9ua2MycGEub3BlbmVkanBhcmFtZXRlcnOha2luZ3JlZGllbnRzgaJjdXJseC1zZWxmI2p1bWJmPWMycGEuYXNzZXJ0aW9ucy9jMnBhLmluZ3JlZGllbnQudjNkaGFzaFgghTE4PhH99fLyqY1iZ8iq4B9qbszb0a7egTu2lyD4aZCkZmFjdGlvbngdY29tLmFudGhyb3BpYy5jbGF1ZGUucHJvdmlkZWRqcGFyYW1ldGVyc6F4H2NvbS5hbnRocm9waWMub3JpZ2luLWNvbmZpZGVuY2VndW5rbm93bmtkZXNjcmlwdGlvbnhmQ2xhdWRlIHByb3ZpZGVkIHRoaXMgZmlsZSBhdCB0aGUgcmVxdWVzdCBvZiBhIHVzZXIgYW5kIG1heSBoYXZlIGNyZWF0ZWQgb3IgbW9kaWZpZWQgdGhlIGZpbGUgY29udGVudHMubXNvZnR3YXJlQWdlbnShZG5hbWVmQ2xhdWRlcmFsbEFjdGlvbnNJbmNsdWRlZPUAAADIanVtYgAAAEBqdW1kY2JvcgARABCAAACqADibcRNjMnBhLmhhc2guZGF0YQAAAAAYYzJzaB8gv0NbOiBmzBeYlJGPqFEAAACAY2JvcqVjYWxnZnNoYTI1NmNwYWRMAAAAAAAAAAAAAAAAZGhhc2hYIOvjspqOPEMCzVWgwMoTsa/dy1r0M102LTitrbZK7RElZG5hbWVuanVtYmYgbWFuaWZlc3RqZXhjbHVzaW9uc4GiZXN0YXJ0GSyxZmxlbmd0aBkeBAAAAj5qdW1iAAAAJ2p1bWRjMmNsABEAEIAAAKoAOJtxA2MycGEuY2xhaW0udjIAAAACD2Nib3KlY2FsZ2ZzaGEyNTZpc2lnbmF0dXJleE1zZWxmI2p1bWJmPS9jMnBhL3VybjpjMnBhOmY2MTAwZTZiLWZiMGEtNDY5Yy1iMTA2LTdkYTJjMDJmODM0OS9jMnBhLnNpZ25hdHVyZWppbnN0YW5jZUlEeCx4bXA6aWlkOjlhY2RjNjYxLWMwMzYtNDk3NC1hNDI4LTMyZWYwNzNhYjJkYXJjcmVhdGVkX2Fzc2VydGlvbnODomN1cmx4LXNlbGYjanVtYmY9YzJwYS5hc3NlcnRpb25zL2MycGEuaW5ncmVkaWVudC52M2RoYXNoWCCFMTg+Ef318vKpjWJnyKrgH2puzNvRrt6BO7aXIPhpkKJjdXJseCpzZWxmI2p1bWJmPWMycGEuYXNzZXJ0aW9ucy9jMnBhLmFjdGlvbnMudjJkaGFzaFggW2FZ3pc6sXFvm+hlCFxmrplTlG/HlzGWKW+h/9UpjYWiY3VybHgpc2VsZiNqdW1iZj1jMnBhLmFzc2VydGlvbnMvYzJwYS5oYXNoLmRhdGFkaGFzaFgg+F3oq2zEJpGOYoYVyxRaOXqpTKnbiuovbyhWTfhGJ2x0Y2xhaW1fZ2VuZXJhdG9yX2luZm+jZG5hbWVvQW50aHJvcGljIEZpbGVzZ3ZlcnNpb25lMS4wLjBrc3BlY1ZlcnNpb25lMi40LjAAABA4anVtYgAAAChqdW1kYzJjcwARABCAAACqADibcQNjMnBhLnNpZ25hdHVyZQAAABAIY2JvctKEWQISogEmGCFZAgowggIGMIIBjaADAgECAhRA5aAK7sI50L64g/oGQgU9Z1UTADAKBggqhkjOPQQDAzBJMRcwFQYDVQQKEw5BbnRocm9waWMsIFBCQzEuMCwGA1UEAxMlQW50aHJvcGljIENvbnRlbnQgQ3JlZGVudGlhbHMgUm9vdCBDQTAeFw0yNjA4MDcxODQzNTZaFw0yODA4MDYxOTQzNTZaMEQxFzAVBgNVBAoTDkFudGhyb3BpYywgUEJDMSkwJwYDVQQDEyBBbnRocm9waWMgQ2xhdWRlIENvbnRlbnQgU2lnbmluZzBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABJh6CmvLUBgFFNU0vUKlOVtE6djd17L5SuwX0LemFisBM3dkd/3cyjxFA3Qo5S46fX0/ihY0VZ7mfb9KF703t5OjWDBWMA4GA1UdDwEB/wQEAwIHgDAVBgNVHSUEDjAMBgorBgEEAYPoXgIBMAwGA1UdEwEB/wQCMAAwHwYDVR0jBBgwFoAUzlHiBIFOZFsj+OPEz5o+nMHXXMIwCgYIKoZIzj0EAwMDZwAwZAIwMXMdFJ4BetLLVY7ORuE9noqbbAZOZn/aArXyTwFAZfKrPzxF2vPoJNf1+UCdg1XGAjBwX1zd9WGqYkqmL5SFqw1QySjr1zJfpJM9+1rdDwSPLMOPOjKuiXjoU/pUUeG9RwmhY3BhZFkNngAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPZYQPcvHaoyrPCjGyD/D+PUAsLzO80Z/Kvby0NSapCAB6q2LkdqXX0XWjX3p2SgL1UlQTQjww/SnDIjliW9kVPocE0=</c2pa:manifest></metadata></svg>
