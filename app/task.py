@@ -3,7 +3,7 @@
 import json
 from datetime import datetime, timezone
 from typing import Any, Dict, Optional
-from db import get_connection
+from db import get_connection, insert_id
 from app.loader import load_scenario
 from app.twist import log_event
 from checks import report_checks
@@ -20,11 +20,11 @@ def save_task(session_id: str, text: str, user_id: Optional[str] = None, current
 
         uid = user_id or sess["user_id"]
         variant = sess["variant"]
-        cursor = conn.execute(
+        task_id = insert_id(
+            conn,
             "INSERT INTO tasks (session_id, user_id, text, submitted_time) VALUES (?, ?, ?, ?)",
             (session_id, uid, text, now.isoformat()),
         )
-        task_id = cursor.lastrowid
         conn.execute("UPDATE sessions SET status = 'task_submitted' WHERE id = ?", (session_id,))
         conn.commit()
     finally:

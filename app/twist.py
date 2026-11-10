@@ -54,7 +54,10 @@ def check_and_fire_twist(session_id: str, current_time: Optional[datetime] = Non
             return None
 
         scenario = load_scenario(sess["scenario_id"])
-        max_seq = conn.execute("SELECT COALESCE(MAX(sequence_number), 0) FROM messages WHERE session_id = ?", (session_id,)).fetchone()[0]
+        max_seq = conn.execute(
+            "SELECT COALESCE(MAX(sequence_number), 0) AS max_sequence FROM messages WHERE session_id = ?",
+            (session_id,),
+        ).fetchone()["max_sequence"]
         twist_text = scenario["twist"]["text"]
         twist_id = uuid.uuid4().hex[:12]
         conn.execute(

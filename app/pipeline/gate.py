@@ -3,7 +3,7 @@
 import logging
 from datetime import datetime, timezone
 from typing import Any, Dict, List
-from db import get_connection
+from db import get_connection, insert_id
 
 logger = logging.getLogger("sabilab.pipeline.gate")
 
@@ -39,11 +39,12 @@ def evaluate_gate(session_id: str, reading_result: Dict[str, Any]) -> List[Dict[
     try:
         saved = []
         for q in questions_to_ask:
-            cursor = conn.execute(
+            clarification_id = insert_id(
+                conn,
                 "INSERT INTO clarifications (session_id, message_id, question, asked_time) VALUES (?, ?, ?, ?)",
                 (session_id, q["message_id"], q["question"], now),
             )
-            saved.append({"id": cursor.lastrowid, "message_id": q["message_id"], "question": q["question"]})
+            saved.append({"id": clarification_id, "message_id": q["message_id"], "question": q["question"]})
         conn.execute("UPDATE sessions SET status = 'awaiting_clarification' WHERE id = ?", (session_id,))
         conn.commit()
         return saved

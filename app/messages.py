@@ -41,7 +41,10 @@ def post_message(session_id: str, sender: str, text: str, current_time: Optional
 
         scenario = load_scenario(sess["scenario_id"])
         participants = conn.execute("SELECT display_name FROM participants WHERE session_id = ? AND kind = 'ai'", (session_id,)).fetchall()
-        max_seq = conn.execute("SELECT COALESCE(MAX(sequence_number), 0) FROM messages WHERE session_id = ?", (session_id,)).fetchone()[0]
+        max_seq = conn.execute(
+            "SELECT COALESCE(MAX(sequence_number), 0) AS max_sequence FROM messages WHERE session_id = ?",
+            (session_id,),
+        ).fetchone()["max_sequence"]
 
         student_msg_id = uuid.uuid4().hex[:12]
         max_seq += 1

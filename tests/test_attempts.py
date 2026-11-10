@@ -26,7 +26,7 @@ def _seed_score(session_id: str, criterion: str, level: str, quote: str):
         (session_id, criterion, level, quote),
     )
     conn.execute(
-        """INSERT OR REPLACE INTO results (session_id, levels, did_well, improve, recommendation, routing)
+        """INSERT INTO results (session_id, levels, did_well, improve, recommendation, routing)
            VALUES (?, '{}', 'Clear communication', 'Be faster', 'Practice drill', 'AI-assessed')""",
         (session_id,),
     )

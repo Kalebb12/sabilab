@@ -1,18 +1,17 @@
 """Tests for scenario loading, API endpoints, and database schema."""
 
 import json
-import sqlite3
 import pytest
 from fastapi.testclient import TestClient
 import config
-from db import init_db, get_connection
+from db import get_table_names, init_db
 from app.loader import list_scenarios, load_scenario, validate_scenario
 from main import app
 
 
 @pytest.fixture
 def test_db(tmp_path):
-    """Create a temporary SQLite database for testing."""
+    """Create an isolated database for schema testing."""
     db_file = tmp_path / "test_sabilab.db"
     init_db(db_file)
     return db_file
@@ -75,12 +74,8 @@ def test_get_scenarios_endpoint():
 
 
 def test_db_tables_created(test_db):
-    """Verify that all 12 tables from Build Spec Section 3 exist in SQLite."""
-    conn = sqlite3.connect(str(test_db))
-    cursor = conn.cursor()
-    cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
-    tables = {row[0] for row in cursor.fetchall()}
-    conn.close()
+    """Verify that all required tables from Build Spec Section 3 exist."""
+    tables = get_table_names(test_db)
 
     expected_tables = {
         "users", "sessions", "participants", "messages",
