@@ -89,13 +89,16 @@ def test_side_by_side_results_and_card():
     assert "Proficient" in r_card.text
 
 
-def test_cannot_exceed_two_attempts():
-    """Attempting a 3rd session raises ValueError."""
+def test_more_than_two_attempts_allowed():
+    """Additional attempts keep working and stay on variant B after the first retry."""
     s1 = create_session({"consent": True, "first_name": "Ngozi", "mode": "demo"})
     _seed_score(s1["session_id"], "Clarity and Brevity", "Foundation", "text 1")
 
     s2 = create_session({"consent": True, "user_id": s1["user_id"], "first_name": "Ngozi", "mode": "demo"})
     _seed_score(s2["session_id"], "Clarity and Brevity", "Proficient", "text 2")
 
-    with pytest.raises(ValueError, match="Maximum of 2 attempts"):
-        create_session({"consent": True, "user_id": s1["user_id"], "first_name": "Ngozi", "mode": "demo"})
+    s3 = create_session({"consent": True, "user_id": s1["user_id"], "first_name": "Ngozi", "mode": "demo"})
+    assert s3["attempt_number"] == 3
+    assert s3["variant"] == "B"
+    assert "[Variant B facts]" in s3["private_brief"]
+    assert "Cash on hand: ₦550,000" in s3["private_brief"]

@@ -10,6 +10,20 @@ from app.twist import log_event
 from app.messages import post_message, get_messages
 
 
+def _format_variant_b_facts(facts: Dict[str, Any]) -> str:
+    """Convert variant B fact keys into readable brief text."""
+    labels = {
+        "cash_on_hand": "Cash on hand",
+        "overdue_kano_invoice": "Overdue Kano invoice",
+        "cash_remaining_if_paid_in_full": "Cash remaining after full payment",
+        "mrs_bello_discount_request": "Mrs Bello's requested discount",
+    }
+    return "; ".join(
+        f"{labels.get(key, key.replace('_', ' ').title())}: {value}"
+        for key, value in facts.items()
+    )
+
+
 def _get_attempt_number(conn, user_id: str, scenario_id: str) -> tuple[int, str]:
     """Return (attempt_number, variant) for a new session based on prior completed attempts."""
     prior = conn.execute(
@@ -49,8 +63,6 @@ def create_session(data: Dict[str, Any], current_time: Optional[datetime] = None
                 (user_id, first_name, "v0.1", now.isoformat()),
             )
         attempt_number, variant = _get_attempt_number(conn, user_id, scenario["id"])
-        if attempt_number > 2:
-            raise ValueError("Maximum of 2 attempts allowed per scenario.")
         conn.execute(
             "INSERT INTO sessions (id, user_id, scenario_id, variant, attempt_number, mode, language, start_time, status)"
             " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
@@ -87,7 +99,8 @@ def create_session(data: Dict[str, Any], current_time: Optional[datetime] = None
     brief = scenario.get("student_brief", "")
     if variant == "B":
         vb = scenario.get("variant_b", {}).get("facts", {})
-        brief += "\n\n[Variant B facts] " + "; ".join(f"{k}: {v}" for k, v in vb.items())
+        if vb:
+            brief += "\n\n[Variant B facts] " + _format_variant_b_facts(vb)
     return {
         "session_id": session_id,
         "user_id": user_id,
