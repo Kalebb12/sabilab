@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SabiLab: practise the job before you have one</title>
+<meta name="description" content="Short, realistic work simulations for Nigerian graduates. Feedback quotes your own words, and you finish with an Evidence Card employers can open.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Public+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  color-scheme:light;
+  --ink:#1B1A4B; --ink2:#2A2870; --page:#F6F5FB; --card:#fff; --line:#E3E1F0;
+  --text:#25244A; --mute:#5E5C82; --violet:#6D4AFF; --violet-soft:#EAE5FF;
+  --go:#1B8A4E; --go-d:#146B3B; --red:#E5484D; --sun:#F5A524; --teal:#1F5A63;
+  --display:'Bricolage Grotesque','Segoe UI',system-ui,sans-serif;
+  --body:'Public Sans','Segoe UI',system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0}
+html{scroll-behavior:smooth}
+body{font:400 17px/1.6 var(--body);color:var(--text);background:var(--page)}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--violet);outline-offset:3px;border-radius:6px}
+.wrap{max-width:1160px;margin:0 auto;padding:0 24px}
+h1,h2,h3{font-family:var(--display);color:var(--ink);line-height:1.08;letter-spacing:-.02em}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:0 26px;border-radius:12px;font:600 16px var(--body);text-decoration:none;border:2px solid transparent;transition:transform .15s,background .15s}
+.btn:hover{transform:translateY(-2px)}
+.btn-go{background:var(--go);color:#fff}.btn-go:hover{background:var(--go-d)}
+.btn-line{border-color:var(--ink);color:var(--ink)}.btn-line:hover{background:var(--violet-soft)}
+
+/* nav */
+header{position:sticky;top:0;z-index:20;background:rgba(246,245,251,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+nav{display:flex;align-items:center;justify-content:space-between;height:68px}
+.logo{font:800 24px var(--display);color:var(--ink);text-decoration:none;display:flex;align-items:center;gap:10px}
+.logo i{width:30px;height:30px;border-radius:9px;background:var(--ink);display:grid;place-items:center;color:#fff;font:800 17px var(--display);font-style:normal}
+.links{display:flex;gap:28px;align-items:center}
+.links a:not(.btn){text-decoration:none;font-weight:500;color:var(--mute)}
+.links a:not(.btn):hover{color:var(--ink)}
+.links .btn{min-height:42px;padding:0 20px;font-size:15px}
+
+/* hero */
+.hero{padding:56px 0 72px}
+.hero-grid{display:grid;grid-template-columns:1fr 1.15fr;gap:56px;align-items:center}
+.hero h1{font-size:clamp(40px,5.4vw,68px);font-weight:800}
+.hero p.lead{font-size:20px;color:var(--mute);margin:22px 0 32px;max-width:30em}
+.cta-row{display:flex;gap:14px;flex-wrap:wrap}
+.hero small{display:block;margin-top:18px;color:var(--mute);font-size:15px}
+.frame{position:relative;border-radius:22px;overflow:hidden;background:linear-gradient(160deg,var(--teal),#2B7580);aspect-ratio:3/2;box-shadow:0 30px 60px -28px rgba(27,26,75,.55)}
+.frame img{width:100%;height:100%;object-fit:cover;display:block}
+.chip{position:absolute;left:4%;bottom:5%;background:var(--ink);color:#fff;border-radius:999px;padding:8px 16px 8px 12px;font:600 15px var(--body);display:flex;gap:8px;align-items:center;font-variant-numeric:tabular-nums}
+.chip b{width:10px;height:10px;border-radius:50%;background:var(--go)}
+.banner{position:absolute;left:3%;right:3%;top:3%;background:var(--red);color:#fff;border-radius:12px;padding:11px 16px;font:600 15px var(--body);display:flex;gap:10px;align-items:center;transform:translateY(-140%);box-shadow:0 10px 24px -8px rgba(229,72,77,.7)}
+.banner.in{animation:drop .5s cubic-bezier(.2,.9,.3,1.2) forwards,shake .4s .5s}
+@keyframes drop{to{transform:translateY(0)}}
+@keyframes shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.tint{position:absolute;inset:0;background:var(--red);opacity:0;pointer-events:none;transition:opacity .4s}
+.tint.on{opacity:.16}
+.bubble{position:absolute;right:4%;bottom:6%;max-width:46%;background:#fff;border-radius:14px 14px 4px 14px;padding:10px 14px;font-size:14.5px;line-height:1.4;box-shadow:0 10px 24px -10px rgba(0,0,0,.45);opacity:0;transform:translateY(8px);transition:opacity .3s,transform .3s}
+.bubble.in{opacity:1;transform:none}
+.bubble strong{display:block;font-size:13px;color:var(--violet);margin-bottom:2px}
+.dots{display:inline-flex;gap:4px;vertical-align:middle}
+.dots span{width:6px;height:6px;border-radius:50%;background:var(--mute);animation:blink 1s infinite}
+.dots span:nth-child(2){animation-delay:.15s}.dots span:nth-child(3){animation-delay:.3s}
+@keyframes blink{50%{opacity:.25}}
+
+/* sections */
+section{padding:84px 0}
+.head{max-width:36em;margin-bottom:44px}
+.head h2{font-size:clamp(30px,3.6vw,46px);font-weight:800}
+.head p{margin-top:14px;color:var(--mute);font-size:18px}
+
+/* shift timeline */
+.shift{background:var(--ink);color:#fff}
+.shift h2{color:#fff}.shift .head p{color:#B9B7E6}
+.steps{display:grid;grid-template-columns:repeat(4,1fr);position:relative}
+.steps:before{content:"";position:absolute;left:0;right:0;top:19px;height:2px;background:linear-gradient(90deg,var(--violet),var(--red) 70%,var(--go))}
+.step{padding:0 22px 0 0;position:relative}
+.step .dot{width:40px;height:40px;border-radius:50%;background:var(--ink);border:2px solid var(--violet);display:grid;place-items:center;font:700 16px var(--display);margin-bottom:22px;position:relative}
+.step:nth-child(3) .dot{border-color:var(--red)}.step:nth-child(4) .dot{border-color:var(--go)}
+.step h3{color:#fff;font-size:22px;margin-bottom:8px}
+.step p{color:#B9B7E6;font-size:16px}
+
+/* feedback sample */
+.split{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:center}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:28px;box-shadow:0 24px 50px -30px rgba(27,26,75,.4)}
+.tag{display:inline-block;font:600 13px var(--body);color:var(--mute);background:var(--page);border:1px solid var(--line);border-radius:999px;padding:3px 12px;margin-bottom:16px}
+.crit{display:flex;justify-content:space-between;align-items:center;margin:20px 0 10px}
+.crit b{font:700 19px var(--display);color:var(--ink)}
+.lvl{font:600 14px var(--body);padding:4px 12px;border-radius:999px}
+.lvl.p{background:#DDF3E6;color:#145C34}.lvl.f{background:#FDE7E7;color:#9B2226}
+.bar{height:8px;border-radius:99px;background:var(--line);overflow:hidden;margin-bottom:12px}
+.bar i{display:block;height:100%;border-radius:99px;width:0;transition:width 1s .2s}
+.bar.p i{background:var(--go)}.bar.f i{background:var(--sun)}
+.in-view .bar.p i{width:78%}.in-view .bar.f i{width:34%}
+blockquote{background:var(--violet-soft);border-left:4px solid var(--violet);border-radius:0 10px 10px 0;padding:11px 14px;font-size:16px;margin-bottom:8px}
+.fix{font-size:15px;color:var(--mute)}
+.fix b{color:var(--ink)}
+.points{list-style:none;padding:0;display:grid;gap:22px}
+.points li{padding-left:34px;position:relative}
+.points li:before{content:"";position:absolute;left:0;top:8px;width:18px;height:18px;border-radius:50%;background:var(--violet-soft);border:5px solid var(--violet)}
+.points b{display:block;font:700 20px var(--display);color:var(--ink);margin-bottom:2px}
+.points span{color:var(--mute)}
+
+/* evidence card */
+.proof{background:#fff;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.ecard{max-width:420px;margin:0 auto;border-radius:22px;background:var(--ink);color:#fff;padding:28px;position:relative;box-shadow:0 30px 60px -30px rgba(27,26,75,.7)}
+.ecard .who{display:flex;gap:14px;align-items:center;margin-bottom:22px}
+.av{width:54px;height:54px;border-radius:50%;background:var(--violet);display:grid;place-items:center;font:800 20px var(--display)}
+.who b{display:block;font:700 20px var(--display)}.who span{color:#B9B7E6;font-size:15px}
+.row{display:flex;justify-content:space-between;padding:12px 0;border-top:1px solid rgba(255,255,255,.14);font-size:16px}
+.row em{font-style:normal;color:#8FE3B1;font-weight:600}
+.ecard blockquote{background:rgba(255,255,255,.08);border-color:var(--sun);margin:16px 0 4px;font-size:15px;color:#E9E8FF}
+.tier{display:flex;gap:10px;margin-top:18px;font-size:14px}
+.tier span{background:rgba(255,255,255,.1);border-radius:999px;padding:5px 12px}
+.tier span.ok{background:var(--go)}
+.ecard .tag{background:rgba(255,255,255,.1);border-color:transparent;color:#B9B7E6}
+
+/* limits + final */
+.limits{display:grid;grid-template-columns:repeat(3,1fr);gap:40px}
+.limits h3{font-size:22px;margin-bottom:8px}.limits p{color:var(--mute)}
+.final{background:var(--ink);text-align:center;padding:88px 0}
+.final h2{color:#fff;font-size:clamp(32px,4vw,52px);font-weight:800;max-width:16em;margin:0 auto 14px}
+.final p{color:#B9B7E6;margin-bottom:30px}
+footer{padding:28px 0;color:var(--mute);font-size:15px;text-align:center}
+
+@media(max-width:900px){
+  .links a:not(.btn){display:none}
+  .hero-grid,.split{grid-template-columns:1fr;gap:36px}
+  .steps{grid-template-columns:1fr;gap:30px}
+  .steps:before{left:19px;right:auto;top:0;bottom:0;width:2px;height:auto}
+  .step{padding:0 0 0 62px}.step .dot{position:absolute;left:0;top:0;margin:0}
+  .limits{grid-template-columns:1fr;gap:28px}
+  section{padding:60px 0}
+  .bubble{max-width:62%;font-size:13px}
+}
+@media(prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+  .banner{transform:none}.bubble{opacity:1;transform:none}.bar.p i{width:78%}.bar.f i{width:34%}
+}
+</style>
+</head>
+<body>
+<header><div class="wrap"><nav>
+  <a class="logo" href="#top"><i>S</i>SabiLab</a>
+  <div class="links">
+    <a href="#shift">How a shift works</a><a href="#feedback">Feedback</a><a href="#employers">For employers</a>
+    <a class="btn btn-go" data-start href="/app">Start a shift</a>
+  </div>
+</nav></div></header>
+
+<main id="top">
+<div class="hero"><div class="wrap hero-grid">
+  <div>
+    <h1>Practise the job before you have one.</h1>
+    <p class="lead">Spend a short shift at a Nigerian fabric business. Your own words are scored, with quotes to show why, and you finish with an Evidence Card an employer can open.</p>
+    <div class="cta-row">
+      <a class="btn btn-go" data-start href="/app">Start Adaeze’s shift</a>
+      <a class="btn btn-line" href="#shift">See how it works</a>
+    </div>
+    <small>About five minutes. You need a first name and your consent.</small>
+  </div>
+  <div class="frame" id="frame">
+    <picture>
+      <source media="(max-width:900px)" srcset="/static/img/shop-scene-sm.webp">
+      <img src="/static/img/shop-scene.webp" width="1200" height="800" alt="Illustration of Adaeze’s Fabrics shop with fabric rolls, a counter and a phone showing a notification" fetchpriority="high">
+    </picture>
+    <div class="tint" id="tint"></div>
+    <div class="banner" id="banner" role="status"><span aria-hidden="true">⚠</span>Twist: your supplier just cancelled supply</div>
+    <div class="chip"><b></b><span id="clock">04:59</span></div>
+    <div class="bubble" id="bubble"><strong>Adaeze</strong><span id="msg"><span class="dots"><span></span><span></span><span></span></span></span></div>
+  </div>
+</div></div>
+
+<section class="shift" id="shift"><div class="wrap">
+  <div class="head"><h2>A shift takes about five minutes and nobody tells you the right order.</h2>
+  <p>You get a role, a team and a clock. Prioritising under pressure is the skill being practised.</p></div>
+  <div class="steps">
+    <div class="step"><div class="dot">1</div><h3>Read your brief</h3><p>You are the new analyst. A private note says what you know and who you work with.</p></div>
+    <div class="step"><div class="dot">2</div><h3>Work the huddle</h3><p>Ask questions, push back, give people what they need. Teammates reply as they would at work.</p></div>
+    <div class="step"><div class="dot">3</div><h3>Handle the twist</h3><p>Halfway through, the situation changes. Your plan has to change with it.</p></div>
+    <div class="step"><div class="dot">4</div><h3>Write your recommendation</h3><p>Two to four sentences with figures. Then see how you did, and try again.</p></div>
+  </div>
+</div></section>
+
+<section id="feedback"><div class="wrap split" id="fb">
+  <div class="panel">
+    <span class="tag">Example result</span>
+    <div class="crit"><b>Clarity</b><span class="lvl p">Proficient</span></div>
+    <div class="bar p"><i></i></div>
+    <blockquote>“How much cash do we have today, and what is owed to the supplier?”</blockquote>
+    <p class="fix"><b>Why:</b> a specific question that points at the numbers that decide the answer.</p>
+    <div class="crit"><b>Communication</b><span class="lvl f">Foundation</span></div>
+    <div class="bar f"><i></i></div>
+    <blockquote>“Just give her the discount, she is a good customer.”</blockquote>
+    <p class="fix"><b>Improve:</b> say what it costs and when you will confirm delivery.</p>
+  </div>
+  <div>
+    <div class="head" style="margin-bottom:28px"><h2>Feedback that shows its evidence.</h2></div>
+    <ul class="points">
+      <li><b>Every judgement quotes you</b><span>If there is no quote to support a level, the result says there is not enough evidence.</span></li>
+      <li><b>Quotes are checked by code</b><span>A quote must exist in your messages before it is shown. Made-up evidence is rejected.</span></li>
+      <li><b>Try again and see the change</b><span>A second attempt uses fresh figures, so improvement is something you can show.</span></li>
+    </ul>
+  </div>
+</div></section>
+
+<section class="proof" id="employers"><div class="wrap split">
+  <div>
+    <div class="head" style="margin-bottom:28px"><h2>Employers see what you did, not what you claim.</h2>
+    <p>Your Evidence Card is a link. You choose what appears on it, and you can switch it off any time.</p></div>
+    <ul class="points">
+      <li><b>Evidence over certificates</b><span>Levels come with your own words, so a reader can judge for themselves.</span></li>
+      <li><b>AI-assessed or human-verified</b><span>Every card says which one it is, and what the AI could not judge.</span></li>
+    </ul>
+  </div>
+  <div class="ecard">
+    <span class="tag">Example card</span>
+    <div class="who"><div class="av">AO</div><div><b>Operations Analyst</b><span>Adaeze’s Fabrics shift</span></div></div>
+    <div class="row"><span>Clarity</span><em>Proficient</em></div>
+    <div class="row"><span>Communication</span><em>Developing</em></div>
+    <blockquote>“I will confirm the delivery time with Ngozi by 12:15.”</blockquote>
+    <div class="tier"><span class="ok">AI-assessed</span><span>Human review available</span></div>
+  </div>
+</div></section>
+
+<section><div class="wrap">
+  <div class="head"><h2>What it cannot do, said plainly.</h2></div>
+  <div class="limits">
+    <div><h3>AI scores can be wrong</h3><p>So every AI-scored result is labelled, and the top level is not awarded without a person checking.</p></div>
+    <div><h3>It is practice, not a licence</h3><p>A card shows what you did in one simulated shift. It does not replace experience.</p></div>
+    <div><h3>Your data stays minimal</h3><p>Names and contact details are removed before scoring, and you consent before anything starts.</p></div>
+  </div>
+</div></section>
+
+<div class="final"><div class="wrap">
+  <h2>Five minutes. One real decision. Proof you can show.</h2>
+  <p>Start with Adaeze’s Fabrics. More scenarios are on the way.</p>
+  <a class="btn btn-go" data-start href="/app">Start a shift</a>
+</div></div>
+</main>
+<footer>SabiLab. Practice, feedback and evidence for graduates.</footer>
+
+<script>
+const $ = id => document.getElementById(id), still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const reply = "Supplier just pulled out. What’s our plan?";
+
+if (still) {
+  $("clock").textContent = "03:41";
+  $("banner").classList.add("in"); $("tint").classList.add("on");
+  $("bubble").classList.add("in"); $("msg").textContent = reply;
+} else {
+  let s = 299;
+  setInterval(() => { s = s > 0 ? s - 1 : 299; $("clock").textContent = "0" + Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0"); }, 1000);
+  setTimeout(() => { $("banner").classList.add("in"); $("tint").classList.add("on"); }, 2200);
+  setTimeout(() => $("tint").classList.remove("on"), 4200);
+  setTimeout(() => $("bubble").classList.add("in"), 3400);
+  setTimeout(() => $("msg").textContent = reply, 5200);
+}
+
+new IntersectionObserver((e, o) => e.forEach(x => { if (x.isIntersecting) { x.target.classList.add("in-view"); o.unobserve(x.target); } }), { threshold: .35 }).observe($("fb"));
+</script>
+</body>
+</html>

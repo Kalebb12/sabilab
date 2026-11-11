@@ -73,6 +73,24 @@ def test_get_scenarios_endpoint():
     assert adaeze["title"] == "Adaeze’s Fabrics"
 
 
+def test_root_serves_landing_page_and_start_links_open_simulation():
+    client = TestClient(app)
+    response = client.get("/")
+
+    assert response.status_code == 200
+    assert "<title>SabiLab: practise the job before you have one</title>" in response.text
+    assert response.text.count('data-start href="/app"') == 3
+
+
+def test_app_route_serves_interactive_simulation():
+    client = TestClient(app)
+    response = client.get("/app")
+
+    assert response.status_code == 200
+    assert 'id="screen-consent"' in response.text
+    assert 'id="start-session-button"' in response.text
+
+
 def test_db_tables_created(test_db):
     """Verify that all required tables from Build Spec Section 3 exist."""
     tables = get_table_names(test_db)

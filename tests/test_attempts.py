@@ -2,19 +2,10 @@
 
 import pytest
 from fastapi.testclient import TestClient
-import config
 from app.session import create_session
 from app.task import save_task
 from app.card import publish_card
-from db import init_db, get_connection
-
-
-@pytest.fixture(autouse=True)
-def setup_test_db(tmp_path, monkeypatch):
-    """Set up an isolated database for attempt tests."""
-    db_file = tmp_path / "attempts_test.db"
-    monkeypatch.setattr(config, "DB_PATH", db_file)
-    init_db(db_file)
+from db import get_connection
 
 
 def _seed_score(session_id: str, criterion: str, level: str, quote: str):

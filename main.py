@@ -43,7 +43,19 @@ app.include_router(card_router)
 
 @app.get("/")
 def serve_index():
-    """Serve the single-page application interface if present."""
+    """Serve the landing page."""
+    landing_file = config.STATIC_DIR / "landing.html"
+    if landing_file.exists():
+        return FileResponse(landing_file)
+    index_file = config.STATIC_DIR / "index.html"
+    if index_file.exists():
+        return FileResponse(index_file)
+    return {"message": "SabiLab API running", "scenarios": "/scenarios"}
+
+
+@app.get("/app")
+def serve_app():
+    """Serve the interactive simulation interface."""
     index_file = config.STATIC_DIR / "index.html"
     if index_file.exists():
         return FileResponse(index_file)
