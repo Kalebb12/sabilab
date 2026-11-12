@@ -148,8 +148,8 @@
       <span style="font-size:0.9rem;">I agree to participate and allow my simulation responses to be evaluated by SabiLab's assessment pipeline.</span>
     </label>
 
-    <input type="text" id="student-name-input" placeholder="Your first name" value="Student">
-    <button onclick="onStartSession()">Start Simulation →</button>
+    <input type="text" id="student-name-input" placeholder="Your first name">
+    <button id="start-session-button" onclick="onStartSession()">Start Simulation →</button>
     <button class="secondary" onclick="showScreen('screen-landing')">Back</button>
   </section>
 
@@ -236,6 +236,7 @@
   <section id="screen-results" class="screen">
     <div class="brand">Verified Results</div>
     <h2>Simulation Competency Report</h2>
+    <p id="results-student-sub" style="font-size:0.95rem;color:#0284c7;font-weight:600;margin-bottom:0.75rem;"></p>
 
     <div id="badge-display" class="badge-box"></div>
 
@@ -259,16 +260,22 @@
 
     <div style="margin-bottom:1rem; font-size:0.9rem;">
       <label style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.4rem; cursor:pointer;">
-        <input type="checkbox" class="card-field-check" value="badges" checked> Simulation Badge & Tier
+        <input type="checkbox" class="card-field-check" value="name" checked> Learner name
       </label>
       <label style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.4rem; cursor:pointer;">
-        <input type="checkbox" class="card-field-check" value="levels" checked> Skill Competency Levels
+        <input type="checkbox" class="card-field-check" value="scores" checked> Skill competency levels
       </label>
       <label style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.4rem; cursor:pointer;">
         <input type="checkbox" class="card-field-check" value="quotes" checked> Verified Student Quotes
       </label>
       <label style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.4rem; cursor:pointer;">
-        <input type="checkbox" class="card-field-check" value="recommendations" checked> Targeted Growth Drill
+        <input type="checkbox" class="card-field-check" value="verification_tier" checked> Verification status
+      </label>
+      <label style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.4rem; cursor:pointer;">
+        <input type="checkbox" class="card-field-check" value="growth_drill" checked> Targeted growth drill
+      </label>
+      <label style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.4rem; cursor:pointer;">
+        <input type="checkbox" class="card-field-check" value="badges" checked> Simulation badge
       </label>
     </div>
 

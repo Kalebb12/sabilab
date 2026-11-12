@@ -103,7 +103,7 @@ def test_full_session_produces_verified_scores():
                         "criterion": "A1 Accuracy",
                         "level": "Proficient",
                         "confidence": "high",
-                        "evidence": "₦480,000",
+                        "evidence": "₦480,000 cash",
                         "evidence_message_id": "M7",
                         "counter_evidence": None,
                         "reason": "Correctly quoted cash balance.",

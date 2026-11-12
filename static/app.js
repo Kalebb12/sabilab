@@ -3,7 +3,7 @@
 let state = {
   sessionId: localStorage.getItem("sabi_session_id") || null,
   userId: localStorage.getItem("sabi_user_id") || null,
-  studentName: localStorage.getItem("sabi_student_name") || "Student",
+  studentName: localStorage.getItem("sabi_student_name") || "SabiLab learner",
   role: "", brief: "", roster: [], scenarioId: "adaeze",
   huddleRemaining: 90,
   timerInterval: null, pollInterval: null, autosaveInterval: null,
@@ -24,7 +24,7 @@ async function onStartSession() {
   const consent = document.getElementById("consent-check").checked;
   const nameInput = document.getElementById("student-name-input").value.trim();
   if (!consent) return alert("Please accept consent to continue.");
-  if (nameInput) state.studentName = nameInput;
+  state.studentName = nameInput || "SabiLab learner";
 
   try {
     const data = await API.startSession(state.studentName, true, state.userId, state.scenarioId);
@@ -58,6 +58,10 @@ async function showResultsScreen() {
 }
 
 function renderResults(data) {
+  const sName = data.student_name || data.first_name || state.studentName || "SabiLab learner";
+  const nameSub = document.getElementById("results-student-sub");
+  if (nameSub) nameSub.textContent = `Learner: ${sName}`;
+
   const skillsList = document.getElementById("results-skills");
   skillsList.innerHTML = (data.scores || []).map(s => {
     const hasQuote = s.evidence && s.evidence !== "Insufficient evidence";

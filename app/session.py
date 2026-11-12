@@ -51,7 +51,8 @@ def create_session(data: Dict[str, Any], current_time: Optional[datetime] = None
     now = current_time or datetime.now(timezone.utc)
     user_id = data.get("user_id") or uuid.uuid4().hex[:12]
     session_id = uuid.uuid4().hex[:12]
-    first_name = data.get("first_name", "Student")
+    raw_name = (data.get("first_name") or "").strip()
+    first_name = raw_name if raw_name and raw_name.lower() != "student" else "SabiLab learner"
     mode = data.get("mode", "demo")
 
     conn = get_connection()
@@ -62,6 +63,8 @@ def create_session(data: Dict[str, Any], current_time: Optional[datetime] = None
                 "INSERT INTO users (id, first_name, consent_version, consent_time) VALUES (?, ?, ?, ?)",
                 (user_id, first_name, "v0.1", now.isoformat()),
             )
+        elif first_name != "SabiLab learner":
+            conn.execute("UPDATE users SET first_name = ? WHERE id = ?", (first_name, user_id))
         attempt_number, variant = _get_attempt_number(conn, user_id, scenario["id"])
         conn.execute(
             "INSERT INTO sessions (id, user_id, scenario_id, variant, attempt_number, mode, language, start_time, status)"

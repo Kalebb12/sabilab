@@ -2,8 +2,9 @@
 
 import os
 from db import get_connection
+from app.rubric import get_level_display, get_level_keys
 
-LEVELS = ["Needs practice", "Foundation", "Proficient", "Insufficient evidence"]
+LEVELS = [get_level_display(level) for level in get_level_keys()]
 
 
 def _row(tag, *cells):
@@ -70,16 +71,22 @@ def list_review_rows() -> list:
 
 def apply_review(score_id: int, session_id: str, new_level: str, action: str):
     """Update score level and upgrade badge/result tier to Human-verified."""
+    import json
+    from datetime import datetime, timezone
     conn = get_connection()
+    now = datetime.now(timezone.utc).isoformat()
     try:
         if action == "change":
             conn.execute("UPDATE scores SET level = ? WHERE id = ?", (new_level, score_id))
-        # Always mark routing and badge tier as Human-verified
         conn.execute(
             "UPDATE results SET routing = 'Human-verified' WHERE session_id = ?", (session_id,)
         )
         conn.execute(
             "UPDATE badges SET tier = 'Human-verified' WHERE session_id = ?", (session_id,)
+        )
+        conn.execute(
+            "INSERT INTO events (session_id, type, time, details) VALUES (?, 'human_review', ?, ?)",
+            (session_id, now, json.dumps({"reviewer": "SabiLab Reviewer", "confirmed_at": now})),
         )
         conn.commit()
     finally:

@@ -65,10 +65,10 @@ def test_side_by_side_results_and_card():
     client = TestClient(app)
 
     s1 = create_session({"consent": True, "first_name": "Chidi", "mode": "demo"})
-    _seed_score(s1["session_id"], "Clarity and Brevity", "Needs practice", "first try text")
+    _seed_score(s1["session_id"], "C1", "Needs practice", "first try text")
 
     s2 = create_session({"consent": True, "user_id": s1["user_id"], "first_name": "Chidi", "mode": "demo"})
-    _seed_score(s2["session_id"], "Clarity and Brevity", "Proficient", "second try text")
+    _seed_score(s2["session_id"], "C1", "Proficient", "second try text")
 
     # Check results API for session 2
     r_results = client.get(f"/session/{s2['session_id']}/results")
@@ -76,7 +76,7 @@ def test_side_by_side_results_and_card():
     comp = r_results.json().get("comparison")
     assert comp is not None
     assert len(comp["rows"]) >= 1
-    row = next(r for r in comp["rows"] if r["criterion"] == "Clarity and Brevity")
+    row = next(r for r in comp["rows"] if r["criterion"] == "C1")
     assert row["attempt_1"] == "Needs practice"
     assert row["attempt_2"] == "Proficient"
 

@@ -1,0 +1,178 @@
+{
+  "version": "v1.0",
+  "levels": {
+    "needs_practice": {
+      "display": "Needs practice",
+      "order": 1
+    },
+    "foundation": {
+      "display": "Foundation",
+      "order": 2
+    },
+    "proficient": {
+      "display": "Proficient",
+      "order": 3
+    },
+    "insufficient_evidence": {
+      "display": "Not enough evidence",
+      "order": 0
+    }
+  },
+  "dimensions": {
+    "Communication": {
+      "display": "Communication",
+      "criteria": [
+        {
+          "id": "C1",
+          "name": "Clarity",
+          "levels": {
+            "needs_practice": "Recipient would have to guess who, what or when",
+            "foundation": "Main request is clear, one detail missing (often time or owner)",
+            "proficient": "Recipient can act at once: what, who, by when, and why"
+          }
+        },
+        {
+          "id": "C2",
+          "name": "Audience fit",
+          "levels": {
+            "needs_practice": "Same message whoever reads it, or too long or thin",
+            "foundation": "Some adaptation, such as shorter for the boss",
+            "proficient": "Content, length and register clearly suit this reader"
+          }
+        },
+        {
+          "id": "C3",
+          "name": "Professional tone",
+          "levels": {
+            "needs_practice": "Dismissive, blaming, mocking, hostile, or ignores upset customer",
+            "foundation": "Courteous and neutral, little acknowledgement or direction",
+            "proficient": "Acknowledges feelings, owns mistakes, firm on facts"
+          }
+        },
+        {
+          "id": "C4",
+          "name": "Active understanding",
+          "levels": {
+            "needs_practice": "Assumes facts, asks nothing when information is missing",
+            "foundation": "Asks at least one relevant question or confirms a fact",
+            "proficient": "Asks targeted questions that change the plan and checks understanding"
+          }
+        }
+      ]
+    },
+    "Leadership": {
+      "display": "Leadership",
+      "criteria": [
+        {
+          "id": "L1",
+          "name": "Delegation",
+          "levels": {
+            "needs_practice": "No named owners or no deadlines",
+            "foundation": "Owners named for most tasks, deadlines partly",
+            "proficient": "Every task has owner and deadline fitting budget/time limit"
+          }
+        },
+        {
+          "id": "L2",
+          "name": "Decisions with reasons",
+          "levels": {
+            "needs_practice": "No decision, or a decision with no reason",
+            "foundation": "Decision with one reason",
+            "proficient": "Decision weighs a trade-off and says why"
+          }
+        },
+        {
+          "id": "L3",
+          "name": "Support for others",
+          "levels": {
+            "needs_practice": "Ignores or dismisses a struggling teammate",
+            "foundation": "Acknowledges and offers general help",
+            "proficient": "Acknowledges, changes plan concretely, plans check-in"
+          }
+        },
+        {
+          "id": "L4",
+          "name": "Ownership",
+          "levels": {
+            "needs_practice": "Blames others or circumstances",
+            "foundation": "Accepts responsibility in general terms",
+            "proficient": "Names own decision, what went wrong, specific change for next time"
+          }
+        }
+      ]
+    },
+    "Creative thinking": {
+      "display": "Creative thinking",
+      "criteria": [
+        {
+          "id": "R1",
+          "name": "Problem framing",
+          "levels": {
+            "needs_practice": "Restates symptoms or jumps to a solution",
+            "foundation": "States a problem, partly tied to what was learned",
+            "proficient": "Frames specific problem for specific person, grounded in evidence"
+          }
+        },
+        {
+          "id": "R2",
+          "name": "Options",
+          "levels": {
+            "needs_practice": "One idea only",
+            "foundation": "Two similar ideas",
+            "proficient": "Two+ clearly different options, with choice and reason"
+          }
+        },
+        {
+          "id": "R3",
+          "name": "Use of evidence and constraints",
+          "levels": {
+            "needs_practice": "Ignores what they learned",
+            "foundation": "Uses one fact",
+            "proficient": "Uses several facts and respects stated constraints"
+          }
+        },
+        {
+          "id": "R4",
+          "name": "Iteration",
+          "levels": {
+            "needs_practice": "Defends original idea unchanged",
+            "foundation": "Makes a small change",
+            "proficient": "Changes idea in response to feedback and states learning"
+          }
+        }
+      ]
+    },
+    "Accounts": {
+      "display": "Accounts",
+      "criteria": [
+        {
+          "id": "A1",
+          "name": "Accuracy",
+          "levels": {
+            "needs_practice": "Key figures missing or wrong",
+            "foundation": "Key figures stated correctly",
+            "proficient": "Figures and their implication both correct"
+          }
+        },
+        {
+          "id": "A2",
+          "name": "Prioritisation",
+          "levels": {
+            "needs_practice": "Pays or discounts without looking at cash",
+            "foundation": "Weighs cash or customer, not both",
+            "proficient": "Weighs both, with numbers, and proposes a path"
+          }
+        },
+        {
+          "id": "A3",
+          "name": "Reasoned recommendation",
+          "levels": {
+            "needs_practice": "No reason given",
+            "foundation": "Reason without numbers",
+            "proficient": "Reason with correct numbers"
+          }
+        }
+      ]
+    }
+  }
+}
