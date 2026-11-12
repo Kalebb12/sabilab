@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 from typing import Any, Dict, Optional
 import config
 from db import get_connection
-from app.loader import load_scenario
+from app.loader import load_scenario, render_scenario_text
 
 
 def log_event(session_id: str, event_type: str, details: Optional[str] = None, event_time: Optional[datetime] = None) -> None:
@@ -40,7 +40,10 @@ def check_and_fire_twist(session_id: str, current_time: Optional[datetime] = Non
 
     conn = get_connection()
     try:
-        sess = conn.execute("SELECT start_time, mode, scenario_id FROM sessions WHERE id = ?", (session_id,)).fetchone()
+        sess = conn.execute(
+            "SELECT start_time, mode, scenario_id, variant FROM sessions WHERE id = ?",
+            (session_id,),
+        ).fetchone()
         if not sess:
             return None
         start_dt = datetime.fromisoformat(sess["start_time"])
@@ -58,7 +61,7 @@ def check_and_fire_twist(session_id: str, current_time: Optional[datetime] = Non
             "SELECT COALESCE(MAX(sequence_number), 0) AS max_sequence FROM messages WHERE session_id = ?",
             (session_id,),
         ).fetchone()["max_sequence"]
-        twist_text = scenario["twist"]["text"]
+        twist_text = render_scenario_text(scenario["twist"]["text"], scenario, sess["variant"])
         twist_id = uuid.uuid4().hex[:12]
         conn.execute(
             "INSERT INTO messages (id, session_id, sequence_number, sender, text, sent_time, phase) VALUES (?, ?, ?, ?, ?, ?, ?)",
@@ -68,5 +71,16 @@ def check_and_fire_twist(session_id: str, current_time: Optional[datetime] = Non
     finally:
         conn.close()
 
-    log_event(session_id, "twist_fired", json.dumps({"elapsed_seconds": elapsed}), now)
-    return {"id": twist_id, "sender": scenario["owner"]["name"], "text": twist_text, "sequence_number": max_seq + 1}
+    log_event(
+        session_id,
+        "twist_fired",
+        json.dumps({"elapsed_seconds": elapsed, "message_id": twist_id}),
+        now,
+    )
+    return {
+        "id": twist_id,
+        "sender": scenario["owner"]["name"],
+        "text": twist_text,
+        "sequence_number": max_seq + 1,
+        "phase": "twist",
+    }

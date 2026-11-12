@@ -18,6 +18,7 @@ def setup_db(tmp_path, monkeypatch):
     """Isolate database for safeguards tests."""
     db_file = tmp_path / "safeguards_test.db"
     monkeypatch.setattr("config.DB_PATH", db_file)
+    monkeypatch.setattr("config.GROQ_API_KEY", "")
     init_db(db_file)
     yield db_file
     set_test_llm_handler(None)

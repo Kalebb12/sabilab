@@ -46,7 +46,7 @@ def _call_settings(call_type: str) -> tuple[str, Optional[int], Optional[str]]:
     if call_type == "reading":
         return config.LLM_MODEL_FAST, 800, "low"
     if call_type == "persona":
-        return config.LLM_MODEL_FAST, 150, None
+        return config.LLM_MODEL_FAST, 150, "low"
     if call_type.startswith("scoring"):
         return config.LLM_MODEL_SCORING, 1500, "low"
     return config.LLM_MODEL, None, None
@@ -59,6 +59,7 @@ def _create_completion(
     max_tokens: Optional[int],
     reasoning_effort: Optional[str],
     provider: str,
+    allow_json_retry: bool = True,
 ) -> tuple[Any, float]:
     started = time.monotonic()
     options = {"model": model, "messages": messages, "response_format": {"type": "json_object"}, "temperature": 0.1}
@@ -73,7 +74,11 @@ def _create_completion(
         json_mode_failure = any(term in message for term in (
             "response_format", "json_object", "failed to generate json", "failed_generation"
         ))
-        if str(getattr(exc, "status_code", "")) != "400" or not json_mode_failure:
+        if (
+            not allow_json_retry
+            or str(getattr(exc, "status_code", "")) != "400"
+            or not json_mode_failure
+        ):
             raise
         logger.warning("LLM provider=%s model=%s JSON mode failed; retrying without response_format",
                        provider, model)
@@ -84,13 +89,23 @@ def _create_completion(
 
 
 def _request_with_retries(client: Any, messages: list[dict[str, str]], model: str,
-                          max_tokens: Optional[int], effort: Optional[str], provider: str) -> Any:
-    for retry in range(3):
+                          max_tokens: Optional[int], effort: Optional[str], provider: str,
+                          timeout_seconds: Optional[float] = None) -> Any:
+    attempts = 1 if timeout_seconds is not None else 3
+    for retry in range(attempts):
         started = time.monotonic()
         try:
             response, elapsed = _create_completion(
-                client, messages, model, max_tokens, effort, provider
+                client,
+                messages,
+                model,
+                max_tokens,
+                effort,
+                provider,
+                allow_json_retry=timeout_seconds is None,
             )
+            if timeout_seconds is not None and elapsed > timeout_seconds:
+                raise TimeoutError("LLM call exceeded its timeout.")
             usage = getattr(response, "usage", None)
             logger.info("LLM provider=%s model=%s elapsed=%.2fs prompt_tokens=%d completion_tokens=%d",
                         provider, model, elapsed, getattr(usage, "prompt_tokens", 0) or 0,
@@ -102,7 +117,7 @@ def _request_with_retries(client: Any, messages: list[dict[str, str]], model: st
                 status = getattr(getattr(exc, "response", None), "status_code", None)
             logger.info("LLM provider=%s model=%s elapsed=%.2fs prompt_tokens=0 completion_tokens=0",
                         provider, model, time.monotonic() - started)
-            if str(status) != "429" or retry == 2:
+            if str(status) != "429" or retry == attempts - 1:
                 raise
             delay = _rate_limit_delay(exc)
             logger.warning("LLM provider=%s model=%s rate limited; retry %d/2 in %.2fs",
@@ -116,10 +131,10 @@ def _status_code(exc: Exception) -> Any:
     )
 
 
-def _client(base_url: str, api_key: str) -> Any:
+def _client(base_url: str, api_key: str, timeout_seconds: Optional[float] = None) -> Any:
     from openai import OpenAI
     return OpenAI(api_key=api_key, base_url=base_url,
-                  timeout=LLM_TIMEOUT_SECONDS, max_retries=0)
+                  timeout=timeout_seconds or LLM_TIMEOUT_SECONDS, max_retries=0)
 
 
 def _call_llm_json_unlocked(
@@ -127,6 +142,7 @@ def _call_llm_json_unlocked(
     prompt: str,
     session_id: Optional[str] = None,
     call_type: str = "general",
+    timeout_seconds: Optional[float] = None,
 ) -> Dict[str, Any]:
     """Call the configured OpenAI-compatible API and return a parsed JSON object."""
     model, max_tokens, effort = _call_settings(call_type)
@@ -136,6 +152,8 @@ def _call_llm_json_unlocked(
     if _TEST_LLM_HANDLER:
         started = time.monotonic()
         result = _TEST_LLM_HANDLER(system_instruction, prompt)
+        if timeout_seconds is not None and time.monotonic() - started > timeout_seconds:
+            raise TimeoutError("LLM call exceeded its timeout.")
         input_tokens = max(1, len(system_instruction + prompt) // 4)
         output_tokens = max(1, len(json.dumps(result)) // 4)
         logger.info("LLM provider=%s model=%s elapsed=%.2fs prompt_tokens=%d completion_tokens=%d", provider, model, time.monotonic() - started, input_tokens, output_tokens)
@@ -145,18 +163,26 @@ def _call_llm_json_unlocked(
 
     if not api_key:
         raise ValueError("GROQ_API_KEY is not configured in the environment.")
-    client = _client(provider_url, api_key)
+    client = _client(provider_url, api_key, timeout_seconds)
     fallback_configured = all((config.FALLBACK_BASE_URL, config.FALLBACK_API_KEY, config.FALLBACK_MODEL))
     fallback_used = False
-    for parse_attempt in range(2):
+    parse_attempts = 1 if timeout_seconds is not None else 2
+    for parse_attempt in range(parse_attempts):
         if parse_attempt:
             prompt += f"\nThe previous response was invalid JSON. Return a valid JSON object only.\nPrevious response:\n{raw_text}"
         messages = [{"role": "system", "content": system_instruction},
                     {"role": "user", "content": prompt}]
         try:
-            response = _request_with_retries(client, messages, model, max_tokens, effort, provider)
+            response = _request_with_retries(
+                client, messages, model, max_tokens, effort, provider, timeout_seconds
+            )
         except Exception as exc:
-            if str(_status_code(exc)) != "429" or not fallback_configured or fallback_used:
+            if (
+                timeout_seconds is not None
+                or str(_status_code(exc)) != "429"
+                or not fallback_configured
+                or fallback_used
+            ):
                 raise
             provider_url, api_key, model = (
                 config.FALLBACK_BASE_URL, config.FALLBACK_API_KEY, config.FALLBACK_MODEL
@@ -183,7 +209,26 @@ def call_llm_json(
     prompt: str,
     session_id: Optional[str] = None,
     call_type: str = "general",
+    timeout_seconds: Optional[float] = None,
 ) -> Dict[str, Any]:
     """Serialize LLM calls across this process and return parsed JSON."""
-    with _LLM_LOCK:
-        return _call_llm_json_unlocked(system_instruction, prompt, session_id, call_type)
+    if timeout_seconds is None:
+        with _LLM_LOCK:
+            return _call_llm_json_unlocked(system_instruction, prompt, session_id, call_type)
+
+    started = time.monotonic()
+    if not _LLM_LOCK.acquire(timeout=timeout_seconds):
+        raise TimeoutError("Timed out waiting for the LLM client.")
+    try:
+        remaining = timeout_seconds - (time.monotonic() - started)
+        if remaining <= 0:
+            raise TimeoutError("Timed out waiting for the LLM client.")
+        return _call_llm_json_unlocked(
+            system_instruction,
+            prompt,
+            session_id,
+            call_type,
+            timeout_seconds=remaining,
+        )
+    finally:
+        _LLM_LOCK.release()

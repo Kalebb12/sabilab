@@ -15,6 +15,7 @@ def setup_db(tmp_path, monkeypatch):
     """Set up an isolated test database for every test."""
     db_file = tmp_path / "test_pipeline.db"
     monkeypatch.setattr("config.DB_PATH", db_file)
+    monkeypatch.setattr("config.GROQ_API_KEY", "")
     init_db(db_file)
     yield db_file
     set_test_llm_handler(None)

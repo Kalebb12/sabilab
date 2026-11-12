@@ -42,7 +42,7 @@ def test_call_llm_json_parses_fenced_json(monkeypatch):
 
 @pytest.mark.parametrize(
     ("call_type", "model", "cap", "effort"),
-    [("reading", "fast", 800, "low"), ("persona", "fast", 150, None),
+    [("reading", "fast", 800, "low"), ("persona", "fast", 150, "low"),
      ("scoring", "scoring", 1500, "low"), ("scoring_retry", "scoring", 1500, "low")],
 )
 def test_call_llm_json_uses_pass_settings(monkeypatch, call_type, model, cap, effort):

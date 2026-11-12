@@ -2,6 +2,7 @@
 
 import json
 import re
+from string import Formatter
 from pathlib import Path
 from typing import Any, Dict, List
 import config
@@ -31,6 +32,27 @@ def load_scenario(scenario_id: str) -> Dict[str, Any]:
         data = json.load(f)
     validate_scenario(data)
     return data
+
+
+def scenario_fact_values(scenario: Dict[str, Any], variant: str = "A") -> Dict[str, str]:
+    """Return the active scenario facts, including alternate variant values."""
+    values = {fact["key"]: str(fact["value"]) for fact in scenario.get("facts", [])}
+    if variant == "B":
+        values.update({
+            key: str(value)
+            for key, value in scenario.get("variant_b", {}).get("facts", {}).items()
+        })
+    return values
+
+
+def render_scenario_text(text: str, scenario: Dict[str, Any], variant: str = "A") -> str:
+    """Fill scenario fact placeholders with values for the active session variant."""
+    fields = {
+        field_name
+        for _, field_name, _, _ in Formatter().parse(text)
+        if field_name is not None
+    }
+    return text.format_map(scenario_fact_values(scenario, variant)) if fields else text
 
 
 def validate_scenario(data: Dict[str, Any]) -> None:

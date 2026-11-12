@@ -73,7 +73,7 @@ function messageRole(sender) {
 
 function bubbleMarkup(message, typing = false) {
   const mine = isStudentMessage(message);
-  const twist = message.phase === "twist" || (message.sender === "Adaeze" && message.sequence_number >= 4);
+  const twist = message.phase === "twist";
   const role = escapeChatText(messageRole(message.sender));
   const sender = escapeChatText(message.sender);
   const initial = escapeChatText(sender.trim().charAt(0).toUpperCase() || "?");
@@ -96,7 +96,7 @@ function renderChat() {
   if (chatTyping) container.insertAdjacentHTML("beforeend", bubbleMarkup(chatTyping, true));
   container.scrollTop = container.scrollHeight;
   const twist = chatMessages.find(message =>
-    message.phase === "twist" || (message.sender === "Adaeze" && message.sequence_number >= 4)
+    message.phase === "twist"
   );
   const banner = document.getElementById("twist-alert");
   if (banner) {

@@ -10,9 +10,9 @@
       "name": "Emeka",
       "role": "Sales",
       "private_brief": "Mrs Bello is our biggest customer this quarter. She wants 20% off the blue Ankara and delivery by 2pm. If we refuse the discount, she might go to another supplier.",
-      "opening_line": "Mrs Bello called again. She is insisting on a 20% discount on the blue Ankara and needs delivery by 2pm sharp. How should we handle her?",
-      "reply_before_twist": "Giving Mrs Bello some discount keeps her happy, but 20% cuts our margin very thin. What do accounts say about our cash?",
-      "reply_after_twist": "Wait, Kano cancelled supply? Without Kano, we have no more stock coming in. We cannot afford to lose them!"
+      "opening_line": "Mrs Bello called again. She is insisting on a {mrs_bello_discount_request} discount on the blue Ankara and needs delivery by {mrs_bello_delivery_deadline} sharp. How should we handle her?",
+      "reply_before_twist": "Mrs Bello is our biggest customer this quarter; that makes her {mrs_bello_discount_request} request hard to ignore.",
+      "reply_after_twist": "Kano will resume talks if we make a partial payment today; I want to keep supply open."
     },
     {
       "id": "operations",
@@ -20,8 +20,8 @@
       "role": "Operations",
       "private_brief": "We have the blue Ankara in stock for Mrs Bello's order. To hit the 2pm delivery deadline, dispatch must leave by 12:30pm.",
       "opening_line": "The blue Ankara rolls are here, but dispatch needs the go-ahead by 12:30pm if Mrs Bello is getting delivery by 2pm.",
-      "reply_before_twist": "I am standing by to pack and send the order as soon as we agree on the terms.",
-      "reply_after_twist": "If Kano Textiles stops delivering, our warehouse will run completely dry next week. We need their raw materials."
+      "reply_before_twist": "The blue Ankara rolls are in stock for Mrs Bello’s order; I can pack once terms are agreed.",
+      "reply_after_twist": "Kano cancelled supply, so no more stock is coming in."
     },
     {
       "id": "marketing",
@@ -46,10 +46,10 @@
     "name": "Adaeze",
     "character": "Owner of Adaeze's Fabrics. Practical, focused on cash flow and business survival.",
     "scripted_lines": {
-      "opening": "Mrs Bello wants 20% off and delivery by 2pm. Sort it out between you.",
-      "follow_up": "I need a plan before this huddle ends.",
-      "twist": "Bad news. Kano Textiles has cancelled our supply because the ₦350,000 invoice is overdue. They will talk again if we pay something today. Give me options I can afford.",
-      "after_twist": "Options I can afford, please."
+      "opening": "Mrs Bello wants {mrs_bello_discount_request} off and delivery by {mrs_bello_delivery_deadline}; blue Ankara is in stock.",
+      "follow_up": "We have {cash_on_hand} cash on hand; I need a plan before this huddle ends.",
+      "twist": "Bad news: Kano Textiles cancelled supply over the overdue {overdue_kano_invoice} invoice. They will talk if we pay something today; full payment leaves {cash_remaining_if_paid_in_full}.",
+      "after_twist": "Marketing proposed a 10% loyalty discount or free delivery; I need affordable options."
     }
   },
   "facts": [
@@ -94,20 +94,34 @@
       "real_time": 0,
       "demo_time": 0,
       "speaker": "Adaeze",
-      "text": "Mrs Bello wants 20% off and delivery by 2pm. Sort it out between you.",
+      "text": "Mrs Bello wants {mrs_bello_discount_request} off and delivery by {mrs_bello_delivery_deadline}; blue Ankara is in stock.",
       "condition": null
     },
     {
       "real_time": 450,
       "demo_time": 45,
       "speaker": "Adaeze",
-      "text": "Bad news. Kano Textiles has cancelled our supply because the ₦350,000 invoice is overdue. They will talk again if we pay something today. Give me options I can afford.",
+      "text": "Bad news: Kano Textiles cancelled supply over the overdue {overdue_kano_invoice} invoice. They will talk if we pay something today; full payment leaves {cash_remaining_if_paid_in_full}.",
       "condition": "twist"
     }
   ],
   "twist": {
     "time_ratio": 0.5,
-    "text": "Bad news. Kano Textiles has cancelled our supply because the ₦350,000 invoice is overdue. They will talk again if we pay something today. Give me options I can afford."
+    "text": "Bad news: Kano Textiles cancelled supply over the overdue {overdue_kano_invoice} invoice. They will talk if we pay something today; full payment leaves {cash_remaining_if_paid_in_full}."
+  },
+  "keyword_reply_bank": {
+    "Emeka": {
+      "stock": "Mrs Bello’s order is for blue Ankara; Ngozi can confirm current stock.",
+      "price_discount": "Mrs Bello is asking for {mrs_bello_discount_request} off the blue Ankara.",
+      "delivery_dispatch": "Mrs Bello needs delivery by {mrs_bello_delivery_deadline}.",
+      "cash_payment_default": "Ask Adaeze about cash. Mrs Bello is our biggest customer this quarter."
+    },
+    "Ngozi": {
+      "stock": "The blue Ankara rolls are in stock for Mrs Bello’s order.",
+      "price_discount": "Marketing proposed a 10% loyalty discount or free delivery.",
+      "delivery_dispatch": "Dispatch needs to leave by 12:30 PM for 2:00 PM delivery.",
+      "cash_payment_default": "Ask Adaeze about cash. I can pack and send once terms are agreed."
+    }
   },
   "task": {
     "prompt": "Write your recommendation to Adaeze in 2 to 4 sentences: what you do about the discount and the Kano invoice, with numbers, and why."

@@ -4,7 +4,9 @@ from datetime import datetime, timedelta, timezone
 import pytest
 from fastapi.testclient import TestClient
 from db import init_db, get_connection
+from app.loader import load_scenario, render_scenario_text
 from app.session import create_session, post_message, get_messages
+from app.pipeline.llm import set_test_llm_handler
 from app.twist import check_and_fire_twist, is_twist_fired
 from main import app
 
@@ -14,6 +16,7 @@ def setup_db(tmp_path, monkeypatch):
     """Set up an isolated test database for every test."""
     db_file = tmp_path / "test_session.db"
     monkeypatch.setattr("config.DB_PATH", db_file)
+    monkeypatch.setattr("config.GROQ_API_KEY", "")
     init_db(db_file)
     return db_file
 
@@ -68,23 +71,29 @@ def test_session_start_success():
     assert msgs[0]["phase"] == "huddle"
 
 
-def test_teammate_scripted_replies_before_twist():
-    """Verify teammates reply with before-twist lines before the twist point."""
+def test_teammate_keyword_replies_before_twist():
+    """Verify addressed teammates use their matching bank lines before the twist."""
     start_time = datetime(2026, 11, 8, 12, 0, 0, tzinfo=timezone.utc)
     sess = create_session({"first_name": "Caleb", "consent": True, "mode": "demo"}, current_time=start_time)
     session_id = sess["session_id"]
 
     # Student posts at t = 10s (twist threshold is 45s)
     t_msg = start_time + timedelta(seconds=10)
-    replies = post_message(session_id, "Caleb", "What is our current cash position?", current_time=t_msg)
+    replies = post_message(
+        session_id,
+        "Caleb",
+        "Emeka, what is Mrs Bello's price request? Ngozi, is the blue Ankara in stock?",
+        current_time=t_msg,
+    )
 
-    # Returned replies: student message + 2 teammate replies
-    assert len(replies) == 3
+    # Returned replies: student message, owner reaction, and 2 targeted teammates
+    assert len(replies) == 4
     assert replies[0]["sender"] == "Caleb"
-    assert replies[1]["sender"] == "Emeka"
-    assert "cuts our margin very thin" in replies[1]["text"]
-    assert replies[2]["sender"] == "Ngozi"
-    assert "standing by to pack and send" in replies[2]["text"]
+    assert replies[1]["sender"] == "Adaeze"
+    assert replies[2]["sender"] == "Emeka"
+    assert "20% off" in replies[2]["text"]
+    assert replies[3]["sender"] == "Ngozi"
+    assert "in stock" in replies[3]["text"]
 
     # Twist should not have fired yet
     assert not is_twist_fired(session_id)
@@ -106,8 +115,11 @@ def test_twist_fires_once_at_server_clock_threshold():
     twist_msg = check_and_fire_twist(session_id, current_time=start_time + timedelta(seconds=45))
     assert twist_msg is not None
     assert twist_msg["sender"] == "Adaeze"
-    assert "Kano Textiles has cancelled our supply" in twist_msg["text"]
+    assert twist_msg["phase"] == "twist"
+    assert "Kano Textiles cancelled supply" in twist_msg["text"]
     assert is_twist_fired(session_id)
+    persisted_twist = next(message for message in get_messages(session_id) if message["id"] == twist_msg["id"])
+    assert persisted_twist["phase"] == "twist"
 
     # Calling check_and_fire_twist again at t = 50s returns None (fires once only)
     twist_repeat = check_and_fire_twist(session_id, current_time=start_time + timedelta(seconds=50))
@@ -129,15 +141,202 @@ def test_teammate_replies_switch_after_twist():
 
     # Student posts at t = 50s (past the 45s twist mark)
     t_after = start_time + timedelta(seconds=50)
-    replies = post_message(session_id, "Caleb", "We need to deal with Kano Textiles immediately.", current_time=t_after)
+    replies = post_message(
+        session_id,
+        "Caleb",
+        "Emeka, what is the supplier payment condition? Ngozi, what is happening to stock?",
+        current_time=t_after,
+    )
 
-    # Replies include: Twist message + Student message + 2 teammate after-twist replies
+    # Replies include the twist, student message, owner reaction, and targeted teammates.
     senders = [m["sender"] for m in replies]
-    assert senders == ["Adaeze", "Caleb", "Emeka", "Ngozi"]
+    assert senders == ["Adaeze", "Caleb", "Adaeze", "Emeka", "Ngozi"]
 
-    # Emeka and Ngozi replies are from the after-twist set
+    # Teammates use the approved bank, while Adaeze uses her after-twist fallback without a key.
     emeka_msg = next(m for m in replies if m["sender"] == "Emeka")
-    assert "Without Kano, we have no more stock coming in" in emeka_msg["text"]
+    assert "Ask Adaeze about cash" in emeka_msg["text"]
 
     ngozi_msg = next(m for m in replies if m["sender"] == "Ngozi")
-    assert "warehouse will run completely dry" in ngozi_msg["text"]
+    assert "in stock" in ngozi_msg["text"]
+    owner_replies = [m for m in replies if m["sender"] == "Adaeze"]
+    assert "Marketing proposed" in owner_replies[-1]["text"]
+
+
+def test_naming_emeka_only_triggers_emeka():
+    start_time = datetime(2026, 11, 8, 12, 0, 0, tzinfo=timezone.utc)
+    sess = create_session({"first_name": "Caleb", "consent": True, "mode": "demo"}, current_time=start_time)
+
+    replies = post_message(
+        sess["session_id"],
+        "Caleb",
+        "Emeka, is Mrs Bello asking for a discount?",
+        current_time=start_time + timedelta(seconds=10),
+    )
+
+    teammate_replies = [message for message in replies if message["sender"] in {"Emeka", "Ngozi"}]
+    assert [message["sender"] for message in teammate_replies] == ["Emeka"]
+
+
+def test_teammate_stops_replying_after_two_answers():
+    start_time = datetime(2026, 11, 8, 12, 0, 0, tzinfo=timezone.utc)
+    sess = create_session({"first_name": "Caleb", "consent": True, "mode": "demo"}, current_time=start_time)
+    session_id = sess["session_id"]
+
+    first = post_message(
+        session_id, "Caleb", "Emeka, what discount does Mrs Bello request?",
+        current_time=start_time + timedelta(seconds=10),
+    )
+    second = post_message(
+        session_id, "Caleb", "Emeka, when does Mrs Bello need delivery?",
+        current_time=start_time + timedelta(seconds=12),
+    )
+    third = post_message(
+        session_id, "Caleb", "Emeka, what is our cash position?",
+        current_time=start_time + timedelta(seconds=14),
+    )
+
+    replies = first + second + third
+    assert sum(message["sender"] == "Emeka" for message in replies) == 2
+    assert sum(message["sender"] == "Ngozi" for message in replies) == 0
+
+
+def test_owner_falls_back_to_scripted_line_without_api_key(caplog):
+    start_time = datetime(2026, 11, 8, 12, 0, 0, tzinfo=timezone.utc)
+    sess = create_session({"first_name": "Caleb", "consent": True, "mode": "demo"}, current_time=start_time)
+
+    replies = post_message(
+        sess["session_id"],
+        "Caleb",
+        "What is the current situation?",
+        current_time=start_time + timedelta(seconds=10),
+    )
+
+    owner_reply = next(message["text"] for message in replies if message["sender"] == "Adaeze")
+    assert owner_reply == "We have ₦480,000 cash on hand; I need a plan before this huddle ends."
+    assert "path=scripted_fallback" in caplog.text
+
+
+def test_rewritten_scenario_amounts_match_each_variant_answer_key():
+    scenario = load_scenario("adaeze")
+
+    def rendered_lines(variant):
+        return [
+            render_scenario_text(line, scenario, variant)
+            for line in [
+                *scenario["owner"]["scripted_lines"].values(),
+                *(
+                    teammate[key]
+                    for teammate in scenario["roster"][:2]
+                    for key in ("reply_before_twist", "reply_after_twist")
+                ),
+                scenario["keyword_reply_bank"]["Emeka"]["price_discount"],
+            ]
+        ]
+
+    lines_a = rendered_lines("A")
+    lines_b = rendered_lines("B")
+
+    assert all(len(line.split()) <= 35 for line in lines_a + lines_b)
+    assert "20%" in lines_a[0] and "₦480,000" in lines_a[1]
+    assert "₦350,000" in lines_a[2] and "₦130,000" in lines_a[2]
+    assert "20%" in lines_a[-1]
+    assert "15%" in lines_b[0] and "₦550,000" in lines_b[1]
+    assert "₦400,000" in lines_b[2] and "₦150,000" in lines_b[2]
+    assert "15%" in lines_b[-1]
+
+
+def test_owner_persona_receives_last_two_messages_and_current_beat():
+    start_time = datetime(2026, 11, 8, 12, 0, 0, tzinfo=timezone.utc)
+    sess = create_session({"first_name": "Caleb", "consent": True, "mode": "demo"}, current_time=start_time)
+    prompts = []
+
+    def mock_owner(system_instruction, prompt):
+        prompts.append(prompt)
+        return {"reply": "Cash flow is tight, and Kano supplies our needed raw materials."}
+
+    set_test_llm_handler(mock_owner)
+    try:
+        post_message(
+            sess["session_id"],
+            "Caleb",
+            "We can discuss the customer discount.",
+            current_time=start_time + timedelta(seconds=10),
+        )
+        post_message(
+            sess["session_id"],
+            "Caleb",
+            "The delivery deadline is still important.",
+            current_time=start_time + timedelta(seconds=50),
+        )
+    finally:
+        set_test_llm_handler(None)
+
+    assert len(prompts) == 2
+    assert "Current beat: after_twist" in prompts[-1]
+    assert "We can discuss the customer discount." in prompts[-1]
+    assert "The delivery deadline is still important." in prompts[-1]
+
+
+def test_owner_persona_falls_back_instead_of_recommending_actions():
+    start_time = datetime(2026, 11, 8, 12, 0, 0, tzinfo=timezone.utc)
+    sess = create_session({"first_name": "Caleb", "consent": True, "mode": "demo"}, current_time=start_time)
+    set_test_llm_handler(
+        lambda system_instruction, prompt: {"reply": "You should pay Kano today."}
+    )
+
+    try:
+        replies = post_message(
+            sess["session_id"],
+            "Caleb",
+            "Kano's invoice is overdue.",
+            current_time=start_time + timedelta(seconds=10),
+        )
+    finally:
+        set_test_llm_handler(None)
+
+    owner_reply = next(message["text"] for message in replies if message["sender"] == "Adaeze")
+    assert owner_reply == "We have ₦480,000 cash on hand; I need a plan before this huddle ends."
+
+
+def test_owner_persona_falls_back_on_unlisted_amount():
+    start_time = datetime(2026, 11, 8, 12, 0, 0, tzinfo=timezone.utc)
+    sess = create_session({"first_name": "Caleb", "consent": True, "mode": "demo"}, current_time=start_time)
+    set_test_llm_handler(
+        lambda system_instruction, prompt: {"reply": "The cash amount is ₦300,000."}
+    )
+
+    try:
+        replies = post_message(
+            sess["session_id"],
+            "Caleb",
+            "Could we discuss the discount?",
+            current_time=start_time + timedelta(seconds=10),
+        )
+    finally:
+        set_test_llm_handler(None)
+
+    owner_reply = next(message["text"] for message in replies if message["sender"] == "Adaeze")
+    assert owner_reply == "We have ₦480,000 cash on hand; I need a plan before this huddle ends."
+
+
+def test_owner_persona_falls_back_on_inferred_constraint():
+    start_time = datetime(2026, 11, 8, 12, 0, 0, tzinfo=timezone.utc)
+    sess = create_session({"first_name": "Caleb", "consent": True, "mode": "demo"}, current_time=start_time)
+    set_test_llm_handler(
+        lambda system_instruction, prompt: {
+            "reply": "My current cash on hand limits my ability to make a partial payment."
+        }
+    )
+
+    try:
+        replies = post_message(
+            sess["session_id"],
+            "Caleb",
+            "Could we discuss the discount?",
+            current_time=start_time + timedelta(seconds=10),
+        )
+    finally:
+        set_test_llm_handler(None)
+
+    owner_reply = next(message["text"] for message in replies if message["sender"] == "Adaeze")
+    assert owner_reply == "We have ₦480,000 cash on hand; I need a plan before this huddle ends."

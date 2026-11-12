@@ -5,7 +5,7 @@ import uuid
 from datetime import datetime, timezone
 from typing import Any, Dict, Optional
 from db import get_connection
-from app.loader import load_scenario
+from app.loader import load_scenario, render_scenario_text
 from app.twist import log_event
 from app.messages import post_message, get_messages
 
@@ -83,7 +83,9 @@ def create_session(data: Dict[str, Any], current_time: Optional[datetime] = None
                 (session_id, seat_idx, "ai", tm["role"], tm["name"]),
             )
         seq = 1
-        owner_opening = scenario["owner"]["scripted_lines"]["opening"]
+        owner_opening = render_scenario_text(
+            scenario["owner"]["scripted_lines"]["opening"], scenario, variant
+        )
         conn.execute(
             "INSERT INTO messages (id, session_id, sequence_number, sender, text, sent_time, phase) VALUES (?, ?, ?, ?, ?, ?, ?)",
             (uuid.uuid4().hex[:12], session_id, seq, scenario["owner"]["name"], owner_opening, now.isoformat(), "huddle"),
@@ -92,7 +94,15 @@ def create_session(data: Dict[str, Any], current_time: Optional[datetime] = None
             seq += 1
             conn.execute(
                 "INSERT INTO messages (id, session_id, sequence_number, sender, text, sent_time, phase) VALUES (?, ?, ?, ?, ?, ?, ?)",
-                (uuid.uuid4().hex[:12], session_id, seq, tm["name"], tm["opening_line"], now.isoformat(), "huddle"),
+                (
+                    uuid.uuid4().hex[:12],
+                    session_id,
+                    seq,
+                    tm["name"],
+                    render_scenario_text(tm["opening_line"], scenario, variant),
+                    now.isoformat(),
+                    "huddle",
+                ),
             )
         conn.commit()
     finally:
